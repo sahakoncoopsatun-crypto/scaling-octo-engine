@@ -184,8 +184,10 @@ thead th{font-weight:600;font-size:12px;color:var(--tx-sec);background:var(--sur
 tr.cat td{font-weight:600;background:var(--surface-alt)}
 tr.tot td{font-weight:700;background:var(--surface-soft);border-top:1px solid #cbd5e1}
 tr.sel td{background:#eff6ff;font-weight:600}
+tr.editable{cursor:pointer}
 tr.editable:hover{background:#f8fafc}
-.edit-actions{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+.edit-actions{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle;opacity:0.85;transition:opacity .15s}
+tr:hover .edit-actions{opacity:1}
 
 /* Tooltip for SVG charts */
 #tip{
@@ -263,8 +265,8 @@ svg rect.hit:hover{fill:rgba(15,23,42,0.03)}
       <button class="btn btn-outline" onclick="openFirebaseModal()" title="ตั้งค่า Firebase (firebase.google.com)">🔥 ตั้งค่า Firebase</button>
       <button class="btn btn-outline" onclick="syncFirebaseCloud()" title="ซิงค์ข้อมูลกับ Firebase ทันที">☁️ ซิงค์ Cloud</button>
       <button class="btn btn-outline" onclick="scrollToEl('compareSection')" title="ระบบเปรียบเทียบแผน">🔄 เปรียบเทียบแผน</button>
-      <button class="btn btn-outline" onclick="scrollToEl('simSection')" title="ระบบจำลองดอกเบี้ย">🎯 ตัวจำลองดอกเบี้ย</button>
-      <button class="btn" id="btnEditToggle" onclick="toggleEditMode()" title="เปิด/ปิดการแก้ไขข้อมูล">✏️ โหมดแก้ไขข้อมูล</button>
+      <button class="btn btn-outline" id="btnSimToggle" onclick="toggleSimulator()" title="คลิกเพื่อแสดงหรือซ่อนเครื่องมือจำลองดอกเบี้ย">🎯 ตัวจำลองดอกเบี้ย</button>
+      <button class="btn btn-outline" id="btnEditToggle" onclick="toggleEditMode()" title="คลิกเพื่อซ่อนหรือแสดงเครื่องมือแก้ไขข้อมูล">✏️ ซ่อนปุ่มแก้ไข</button>
       <button class="btn" onclick="openAddModal('income')" title="เพิ่มรายการรายได้ใหม่">➕ เพิ่มรายได้</button>
       <button class="btn" onclick="openAddModal('expense')" title="เพิ่มรายการค่าใช้จ่ายใหม่">➕ เพิ่มค่าใช้จ่าย</button>
       <button class="btn" onclick="exportData()" title="สำรองข้อมูล JSON">💾 สำรองข้อมูล</button>
@@ -353,16 +355,17 @@ svg rect.hit:hover{fill:rgba(15,23,42,0.03)}
   </section>
 
   <!-- MODULE 2: WHAT-IF INTEREST RATE SIMULATOR -->
-  <section class="sim-box" id="simSection">
+  <section class="sim-box" id="simSection" style="display:none">
     <div class="sim-head">
       <div style="display:flex;align-items:center;gap:10px">
         <span class="sim-badge">What-If Simulator</span>
         <h2 style="color:var(--c-rev)">🎯 เครื่องมือจำลองอัตราดอกเบี้ยและผลประกอบการ</h2>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
         <button class="btn btn-sm" onclick="resetSim()">↺ คืนค่า 0.00%</button>
         <button class="btn btn-sm btn-success" onclick="openSaveScenarioModal()">💾 บันทึกเป็นสถานการณ์ใหม่</button>
         <button class="btn btn-sm btn-outline" onclick="applySimLive()">👁️ ดูกราฟสด</button>
+        <button class="btn btn-sm btn-outline" onclick="toggleSimulator()" title="ซ่อนเครื่องมือจำลองดอกเบี้ย">✕ ซ่อน</button>
       </div>
     </div>
     <div style="font-size:13px;color:var(--tx-sec);margin-bottom:10px">
@@ -460,8 +463,9 @@ svg rect.hit:hover{fill:rgba(15,23,42,0.03)}
     </div>
     <div class="card">
       <h2>แผนธุรกิจ: การจ่ายเงินกู้และการระดมทุน (ล้านบาท)</h2>
-      <div class="chart-box" id="chBox4" style="height:210px"></div>
-      <div class="tablewrap" style="margin-top:10px"><table id="biz"></table></div>
+      <div class="sub">เปรียบเทียบวงเงินกู้และการระดมทุน 3 ช่วงเวลา</div>
+      <div class="chart-box" id="chBox4" style="margin-bottom:18px"></div>
+      <div class="tablewrap"><table id="biz"></table></div>
     </div>
   </div>
 
@@ -477,7 +481,7 @@ svg rect.hit:hover{fill:rgba(15,23,42,0.03)}
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
       <h2>โครงสร้างรายได้</h2>
-      <div class="edit-actions" id="incAddBtn" style="display:none">
+      <div class="edit-actions" id="incAddBtn" style="display:inline-flex">
         <button class="btn btn-sm btn-outline" onclick="openAddModal('income','ดอกเบี้ยรับ')">+ เพิ่มรายได้ดอกเบี้ย</button>
         <button class="btn btn-sm btn-outline" onclick="openAddModal('income','รายได้อื่น')">+ เพิ่มรายได้อื่น</button>
       </div>
@@ -491,7 +495,7 @@ svg rect.hit:hover{fill:rgba(15,23,42,0.03)}
       <h2>ค่าใช้จ่ายรายรายการ</h2>
       <div style="display:flex;align-items:center;gap:8px">
         <select id="gsel" style="font:inherit;font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)"></select>
-        <div class="edit-actions" id="expAddBtn" style="display:none">
+        <div class="edit-actions" id="expAddBtn" style="display:inline-flex">
           <button class="btn btn-sm btn-outline" onclick="openAddModal('expense')">+ เพิ่มค่าใช้จ่ายในหมวด</button>
         </div>
       </div>
@@ -504,7 +508,7 @@ svg rect.hit:hover{fill:rgba(15,23,42,0.03)}
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
       <h2>หมวดครุภัณฑ์และสิ่งก่อสร้าง</h2>
-      <div class="edit-actions" id="capAddBtn" style="display:none">
+      <div class="edit-actions" id="capAddBtn" style="display:inline-flex">
         <button class="btn btn-sm btn-outline" onclick="openAddModal('capex')">+ เพิ่มรายการครุภัณฑ์</button>
       </div>
     </div>
@@ -814,7 +818,7 @@ let D = JSON.parse(JSON.stringify(DEFAULT_D));
 let SC = ['ไม่ลดเลย', 'ลด .10', 'ลด .20', 'ลด .25'];
 let cur = 'ลด .25';
 let gsel = 'ทั้งหมด';
-let isEditMode = false;
+let isEditMode = true; // โหมดแก้ไขเปิดใช้งานทันทีตามความต้องการของผู้ใช้
 let customScenarios = [];
 let currentDimension = 'overview'; // 'overview', 'interest', 'expense', 'business'
 
@@ -1686,15 +1690,15 @@ function kpi() {
   `).join('');
 }
 
-const row = (a, cls) => `<tr class="${cls || ''}">${a.map(x => `<td>${x}</td>`).join('')}</tr>`;
+const row = (a, cls, attrs = '') => `<tr class="${cls || ''}" ${attrs}>${a.map(x => `<td>${x}</td>`).join('')}</tr>`;
 const head = a => `<tr>${a.map(x => `<th>${x}</th>`).join('')}</tr>`;
 
 function renderEditBtn(type, cat, idx) {
   if (!isEditMode) return '';
   return `
     <span class="edit-actions">
-      <button class="btn btn-sm btn-icon" onclick="openEditModal('${type}','${cat}',${idx})" title="แก้ไข">✎</button>
-      <button class="btn btn-sm btn-icon btn-danger" onclick="deleteItem('${type}','${cat}',${idx})" title="ลบ">✕</button>
+      <button class="btn btn-sm btn-icon" onclick="event.stopPropagation();openEditModal('${type}','${cat}',${idx})" title="คลิกเพื่อแก้ไขรายการนี้">✎</button>
+      <button class="btn btn-sm btn-icon btn-danger" onclick="event.stopPropagation();deleteItem('${type}','${cat}',${idx})" title="ลบรายการนี้">✕</button>
     </span>
   `;
 }
@@ -1737,13 +1741,13 @@ function tables() {
   incHtml += inl.map((r, i) => row([
     r[0] + (i === 0 ? ` <span style="font-size:11px;color:var(--mu)">(ตาม ${cur})</span>` : renderEditBtn('income', 'ดอกเบี้ยรับ', i)),
     f(r[1]), f(r[2]), f(r[3]), dl(r[3], r[2], 0)
-  ], isEditMode ? 'editable' : '')).join('');
+  ], isEditMode ? 'editable' : '', i === 0 ? '' : `ondblclick="openEditModal('income','ดอกเบี้ยรับ',${i})" title="ดับเบิลคลิกหรือกด ✎ เพื่อแก้ไขข้อมูล"`)).join('');
   incHtml += row(['รวมรายได้ดอกเบี้ย', f(it[0]), f(it[1]), f(it[2]), dl(it[2], it[1], 0)], 'tot');
 
   incHtml += non.map((r, i) => row([
     r[0] + renderEditBtn('income', 'รายได้อื่น', i),
     f(r[1]), f(r[2]), f(r[3]), dl(r[3], r[2], 0)
-  ], isEditMode ? 'editable' : '')).join('');
+  ], isEditMode ? 'editable' : '', `ondblclick="openEditModal('income','รายได้อื่น',${i})" title="ดับเบิลคลิกหรือกด ✎ เพื่อแก้ไขข้อมูล"`)).join('');
   incHtml += row(['รวมรายได้ที่มิใช่ดอกเบี้ย', f(nt[0]), f(nt[1]), f(nt[2]), dl(nt[2], nt[1], 0)], 'tot');
   incHtml += row(['รวมรายได้ก่อนหักค่าใช้จ่าย', f(it[0] + nt[0]), f(it[1] + nt[1]), f(it[2] + nt[2]), dl(it[2] + nt[2], it[1] + nt[1], 0)], 'tot');
   document.getElementById('tinc').innerHTML = incHtml;
@@ -1766,10 +1770,13 @@ function tables() {
     });
     const t = sm(it);
     expHtml += row([g, f(t[0]), f(t[1]), f(t[2]), dl(t[2], t[1], 1)], 'cat');
-    expHtml += it.map((r, idx) => row([
-      r[0] + (g === 'ดอกเบี้ยจ่าย' && idx < 2 ? ` <span style="font-size:11px;color:var(--mu)">(สถานการณ์)</span>` : renderEditBtn('expense', g, idx)),
-      f(r[1]), f(r[2]), f(r[3]), dl(r[3], r[2], 1)
-    ], isEditMode ? 'editable' : '')).join('');
+    expHtml += it.map((r, idx) => {
+      const isAutoInt = g === 'ดอกเบี้ยจ่าย' && idx < 2;
+      return row([
+        r[0] + (isAutoInt ? ` <span style="font-size:11px;color:var(--mu)">(สถานการณ์)</span>` : renderEditBtn('expense', g, idx)),
+        f(r[1]), f(r[2]), f(r[3]), dl(r[3], r[2], 1)
+      ], isEditMode ? 'editable' : '', isAutoInt ? '' : `ondblclick="openEditModal('expense','${g}',${idx})" title="ดับเบิลคลิกหรือกด ✎ เพื่อแก้ไขข้อมูล"`);
+    }).join('');
   });
   expHtml += row(['รวมค่าใช้จ่ายทั้งสิ้น (ตามแผน)', f(T.exp[0]), f(T.exp[1]), f(s.exp_total), dl(s.exp_total, T.exp[1], 1)], 'tot');
   document.getElementById('texp').innerHTML = expHtml;
@@ -1780,7 +1787,7 @@ function tables() {
       B.capex.map((r, i) => row([
         r[0] + renderEditBtn('capex', 'capex', i),
         f(r[1]), f(r[2]), f(r[3])
-      ], isEditMode ? 'editable' : '')).join('') +
+      ], isEditMode ? 'editable' : '', `ondblclick="openEditModal('capex','capex',${i})" title="ดับเบิลคลิกหรือกด ✎ เพื่อแก้ไขข้อมูล"`)).join('') +
       row(['รวม', ...B.capex_total.map(f)], 'tot');
   }
 }
@@ -1998,27 +2005,30 @@ function deleteScenario(name) {
 function toggleEditMode() {
   isEditMode = !isEditMode;
   const btn = document.getElementById('btnEditToggle');
-  const ind = document.getElementById('editModeIndicator');
   const incAdd = document.getElementById('incAddBtn');
   const expAdd = document.getElementById('expAddBtn');
   const capAdd = document.getElementById('capAddBtn');
 
   if (isEditMode) {
-    btn.classList.add('btn-primary');
-    btn.innerHTML = '✓ เสร็จสิ้นการแก้ไข';
-    ind.style.display = 'block';
-    incAdd.style.display = 'inline-flex';
-    expAdd.style.display = 'inline-flex';
-    capAdd.style.display = 'inline-flex';
-    showToast('เข้าสู่โหมดแก้ไขข้อมูล สามารถกด ✎ เพื่อแก้ไข หรือ ➕ เพื่อเพิ่มรายการได้');
+    if (btn) {
+      btn.classList.add('btn-primary');
+      btn.classList.remove('btn-outline');
+      btn.innerHTML = '✏️ ซ่อนปุ่มแก้ไข';
+    }
+    if (incAdd) incAdd.style.display = 'inline-flex';
+    if (expAdd) expAdd.style.display = 'inline-flex';
+    if (capAdd) capAdd.style.display = 'inline-flex';
+    showToast('เปิดแสดงปุ่มแก้ไขข้อมูลแล้ว');
   } else {
-    btn.classList.remove('btn-primary');
-    btn.innerHTML = '✏️ โหมดแก้ไขข้อมูล';
-    ind.style.display = 'none';
-    incAdd.style.display = 'none';
-    expAdd.style.display = 'none';
-    capAdd.style.display = 'none';
-    showToast('ปิดโหมดแก้ไขข้อมูลแล้ว');
+    if (btn) {
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-outline');
+      btn.innerHTML = '✏️ แสดงปุ่มแก้ไข';
+    }
+    if (incAdd) incAdd.style.display = 'none';
+    if (expAdd) expAdd.style.display = 'none';
+    if (capAdd) capAdd.style.display = 'none';
+    showToast('ซ่อนปุ่มแก้ไขข้อมูลแล้ว (โหมดดูข้อมูล)');
   }
   tables();
 }
@@ -2145,9 +2155,39 @@ function deleteItem(type, cat, idx) {
   }
 }
 
+function toggleSimulator() {
+  const el = document.getElementById('simSection');
+  const btn = document.getElementById('btnSimToggle');
+  if (!el) return;
+  const isHidden = (el.style.display === 'none' || !el.style.display);
+  if (isHidden) {
+    el.style.display = 'block';
+    if (btn) {
+      btn.classList.add('btn-primary');
+      btn.classList.remove('btn-outline');
+      btn.innerHTML = '🎯 ซ่อนตัวจำลองดอกเบี้ย';
+    }
+    updateSimResults();
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.style.borderColor = 'var(--c-pro)';
+    setTimeout(() => { el.style.borderColor = ''; }, 1800);
+  } else {
+    el.style.display = 'none';
+    if (btn) {
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-outline');
+      btn.innerHTML = '🎯 ตัวจำลองดอกเบี้ย';
+    }
+  }
+}
+
 function scrollToEl(id) {
   const el = document.getElementById(id);
   if (el) {
+    if (id === 'simSection' && (el.style.display === 'none' || !el.style.display)) {
+      toggleSimulator();
+      return;
+    }
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     el.style.borderColor = 'var(--c-pro)';
     setTimeout(() => { el.style.borderColor = ''; }, 1800);
