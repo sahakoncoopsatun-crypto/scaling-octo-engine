@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>แผนรายได้และค่าใช้จ่าย ประจำปี 2570</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Firebase App & Database Compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+:root{
+  --bg:#ffffff;
+  --surface:#ffffff;
+  --surface-alt:#f8fafc;
+  --surface-soft:#f1f5f9;
+  --tx:#0f172a;
+  --tx-sec:#475569;
+  --mu:#64748b;
+  --bd:#e2e8f0;
+  --bd-focus:#2563eb;
+  
+  /* Vibrant & Meaningful Palette */
+  --c-rev:#10b981;       /* รายได้: เขียวมรกตสดใส (เงินเข้า) */
+  --c-rev-light:#ecfdf5;
+  --c-exp:#ef4444;       /* ค่าใช้จ่าย: สีแดงสว่าง (เงินออก) */
+  --c-exp-light:#fef2f2;
+  --c-pro:#2563eb;       /* กำไรสุทธิ: น้ำเงินรอยัลบลูสดใส (กำไรมั่นคง) */
+  --c-pro-light:#eff6ff;
+  --c-int:#f59e0b;       /* ดอกเบี้ย: สีเหลืองอำพันสดใส */
+  --c-int-light:#fffbeb;
+  --c-acc:#8b5cf6;       /* สีม่วงสด สำหรับไฮไลต์เสริม */
+  
+  --good:#10b981;
+  --bad:#ef4444;
+  --up:#10b981;
+  --dn:#ef4444;
+  
+  --f-head:"Prompt","IBM Plex Sans Thai",sans-serif;
+  --f-body:"IBM Plex Sans Thai","Noto Sans Thai",sans-serif;
+  
+  box-sizing:border-box;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--tx);font-family:var(--f-body);
+  font-size:14px;line-height:1.55;
+  padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))
+}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+
+/* Typography */
+h1,h2,h3{font-family:var(--f-head);margin:0;font-weight:600;color:var(--tx)}
+h1{font-size:clamp(22px,3.8vw,30px);line-height:1.25}
+h2{font-size:17px;line-height:1.35;display:flex;align-items:center;gap:8px}
+.eyebrow{font-size:12px;letter-spacing:.05em;color:var(--c-pro);text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.sub{color:var(--mu);font-size:13px;margin:3px 0 0}
+
+/* Cards & Layout */
+.card{
+  background:var(--surface);border:1px solid var(--bd);border-radius:12px;
+  padding:20px;box-shadow:0 1px 3px 0 rgba(0,0,0,0.05);transition:all .15s ease
+}
+.card:hover{border-color:#cbd5e1}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,540px),1fr));gap:20px}
+.chart-box{margin-top:14px;position:relative;min-width:0}
+
+/* Header & Toolbars */
+.header-box{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;
+  border:1px solid var(--bd);background:#fff;color:var(--tx);
+  font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s ease
+}
+.btn:hover{background:var(--surface-soft);border-color:#cbd5e1}
+.btn-primary{background:var(--c-pro);border-color:var(--c-pro);color:#fff}
+.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn-success{background:var(--c-rev);border-color:var(--c-rev);color:#fff}
+.btn-success:hover{background:#059669;border-color:#059669}
+.btn-outline{border-color:var(--c-pro);color:var(--c-pro)}
+.btn-outline:hover{background:var(--c-pro-light)}
+.btn-danger{border-color:#fca5a5;color:var(--c-exp);background:#fff}
+.btn-danger:hover{background:var(--c-exp-light);border-color:var(--c-exp)}
+.btn-sm{padding:4px 9px;font-size:12px;border-radius:6px}
+.btn-icon{padding:4px 7px;line-height:1}
+
+/* Firebase Status Pill */
+.fb-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  font-size:12px;font-weight:500;border:1px solid var(--bd);background:#fff;cursor:pointer
+}
+.fb-badge.online{border-color:#a7f3d0;background:#ecfdf5;color:#065f46}
+.fb-badge.offline{border-color:#e2e8f0;background:#f8fafc;color:#64748b}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot-green{background:#10b981}.dot-gray{background:#94a3b8}
+
+/* Nav Badges / Segment */
+.seg-bar{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+  background:var(--surface-alt);border:1px solid var(--bd);padding:8px 14px;border-radius:10px
+}
+.seg{display:inline-flex;flex-wrap:wrap;gap:5px}
+.seg button{
+  font:inherit;font-size:13px;color:var(--tx-sec);background:#fff;border:1px solid var(--bd);
+  border-radius:6px;padding:6px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  font-weight:500;transition:all .15s ease
+}
+.seg button:hover{background:var(--surface-soft);color:var(--tx)}
+.seg button.on{background:var(--c-pro);border-color:var(--c-pro);color:#fff;font-weight:600;box-shadow:0 1px 2px rgba(37,99,235,0.2)}
+.seg-del{opacity:.7;font-size:11px;margin-left:4px;cursor:pointer}
+.seg-del:hover{opacity:1;color:var(--c-exp)}
+
+/* Dimension Tab Segment */
+.dim-seg{display:inline-flex;flex-wrap:wrap;gap:4px;background:var(--surface-soft);padding:4px;border-radius:8px}
+.dim-seg button{
+  font:inherit;font-size:12px;color:var(--tx-sec);background:transparent;border:0;
+  border-radius:6px;padding:5px 12px;cursor:pointer;font-weight:500;transition:all .15s ease
+}
+.dim-seg button:hover{background:#fff;color:var(--tx)}
+.dim-seg button.on{background:#fff;color:var(--c-pro);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.06)}
+
+/* KPI Cards */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.kpi-card{
+  background:#fff;border:1px solid var(--bd);border-radius:10px;padding:16px 18px;
+  border-left:4px solid var(--c-pro);box-shadow:0 1px 3px rgba(0,0,0,0.04)
+}
+.kpi-card.rev{border-left-color:var(--c-rev)}
+.kpi-card.exp{border-left-color:var(--c-exp)}
+.kpi-card.pro{border-left-color:var(--c-pro)}
+.kpi-card.int{border-left-color:var(--c-int)}
+.kl{color:var(--mu);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.02em}
+.kv{font-family:var(--f-head);font-size:27px;font-weight:700;margin:4px 0 2px;letter-spacing:-.01em}
+.kd{font-size:12px;color:var(--mu)}
+.up{color:var(--good);font-weight:600}.dn{color:var(--bad);font-weight:600}
+
+/* Comparison Section */
+.compare-box{
+  background:#ffffff;border:2px solid #bfdbfe;border-radius:14px;padding:20px;
+  box-shadow:0 4px 12px -2px rgba(37,99,235,0.08)
+}
+.compare-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.compare-controls{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.compare-vs{font-weight:700;color:var(--c-pro);font-size:14px;padding:0 4px}
+.cmp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:14px}
+.cmp-kpi{background:var(--surface-alt);border:1px solid var(--bd);border-radius:8px;padding:12px;text-align:center}
+.cmp-lbl{font-size:12px;color:var(--mu);margin-bottom:2px}
+.cmp-val{font-size:17px;font-weight:700;color:var(--tx)}
+.cmp-delta{font-size:12px;margin-top:2px}
+
+/* Simulator Section */
+.sim-box{
+  background:#ffffff;border:2px solid #bbf7d0;border-radius:14px;padding:20px;
+  box-shadow:0 4px 12px -2px rgba(16,185,129,0.08)
+}
+.sim-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.sim-badge{
+  background:var(--c-rev-light);color:var(--c-rev);border:1px solid #a7f3d0;
+  padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase
+}
+.sim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:12px}
+.sim-col{background:var(--surface-alt);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.sim-col-title{font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.slider-group{display:flex;align-items:center;gap:10px;margin:8px 0}
+.slider-group input[type="range"]{flex:1;accent-color:var(--c-rev);cursor:pointer}
+.slider-val{font-weight:700;font-size:16px;min-width:65px;text-align:right;color:var(--c-rev)}
+.presets{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.presets button{
+  padding:3px 8px;font-size:11px;border-radius:6px;border:1px solid var(--bd);
+  background:#fff;color:var(--tx-sec);cursor:pointer
+}
+.presets button:hover{background:var(--c-rev);border-color:var(--c-rev);color:#fff}
+.sim-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:16px}
+
+/* Tables */
+.tablewrap{overflow-x:auto;margin-top:12px;border:1px solid var(--bd);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;background:#fff}
+th,td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal;min-width:210px}
+thead th{font-weight:600;font-size:12px;color:var(--tx-sec);background:var(--surface-soft);position:sticky;top:0;z-index:2}
+tr.cat td{font-weight:600;background:var(--surface-alt)}
+tr.tot td{font-weight:700;background:var(--surface-soft);border-top:1px solid #cbd5e1}
+tr.sel td{background:#eff6ff;font-weight:600}
+tr.editable:hover{background:#f8fafc}
+.edit-actions{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+
+/* Tooltip for SVG charts */
+#tip{
+  position:fixed;z-index:9999;pointer-events:none;background:#0f172a;color:#fff;
+  border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.5;box-shadow:0 8px 20px rgba(0,0,0,.25);
+  max-width:280px;opacity:0;transition:opacity .1s ease
+}
+#tip.show{opacity:1}
+#tip b{font-weight:600;display:block;margin-bottom:3px}
+#tip .tr{display:flex;align-items:center;gap:8px;justify-content:space-between}
+#tip .tr span:first-child{display:inline-flex;align-items:center;gap:6px;color:#cbd5e1}
+#tip .tr i{width:9px;height:9px;border-radius:2px;display:inline-block}
+#tip .tr em{font-style:normal;font-variant-numeric:tabular-nums}
+
+/* SVG Chart Elements */
+svg line.grid{stroke:#f1f5f9;stroke-width:1}
+svg line.base{stroke:#cbd5e1;stroke-width:1.5}
+svg text.tick{fill:#64748b;font-size:11px;font-family:var(--f-body)}
+svg text.gl{fill:#334155;font-size:12px;font-family:var(--f-body);font-weight:500}
+svg text.val{fill:#0f172a;font-size:11px;font-weight:600;font-family:var(--f-body)}
+svg rect.hit{fill:transparent;cursor:default}
+svg rect.hit:hover{fill:rgba(15,23,42,0.03)}
+
+/* Modals */
+.modal-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.45);
+  display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(3px);padding:16px
+}
+.modal-overlay.active{display:flex}
+.modal-box{
+  background:#fff;border:1px solid var(--bd);border-radius:14px;
+  width:100%;max-width:520px;padding:24px;box-shadow:0 20px 25px -5px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto
+}
+.modal-title{font-size:18px;font-weight:700;margin:0 0 14px;font-family:var(--f-head);display:flex;align-items:center;gap:8px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--mu);margin-bottom:4px}
+.form-group input, .form-group select, .form-group textarea{
+  width:100%;font:inherit;background:#fff;color:var(--tx);border:1px solid var(--bd);
+  border-radius:8px;padding:7px 10px;outline:none
+}
+.form-group textarea{font-family:monospace;font-size:12px;resize:vertical}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus{border-color:var(--bd-focus)}
+.modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;right:24px;background:#0f172a;color:#fff;
+  padding:10px 18px;border-radius:8px;font-size:13px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);
+  display:none;align-items:center;gap:8px;z-index:10000;transition:opacity .3s ease
+}
+.toast.active{display:flex}
+
+@media print{
+  .toolbar,.seg-bar,.sim-box,.btn,.edit-actions,.compare-controls{display:none!important}
+  body{background:#fff;color:#000;padding:0}
+  .card,.compare-box{border:none;box-shadow:none;padding:8px 0}
+  .wrap{max-width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <!-- Top Header -->
+  <div class="header-box">
+    <div>
+      <div class="eyebrow">ระบบประมาณการรับจ่าย สหกรณ์ออมทรัพย์</div>
+      <h1>แผนรายได้และค่าใช้จ่าย ประจำปี 2570</h1>
+      <div class="sub">วิเคราะห์แผนงบประมาณ จำลองสถานการณ์อัตราดอกเบี้ย เปรียบเทียบแผนทางการเงิน และซิงค์ Cloud Firebase</div>
+    </div>
+    <div class="toolbar">
+      <div class="fb-badge offline" id="fbStatusBadge" onclick="openFirebaseModal()" title="คลิกเพื่อจัดการการเชื่อมต่อ Firebase">
+        <span class="dot dot-gray" id="fbDot"></span>
+        <span id="fbStatusText">โหมดออฟไลน์</span>
+      </div>
+      <button class="btn btn-outline" onclick="openFirebaseModal()" title="ตั้งค่า Firebase (firebase.google.com)">🔥 ตั้งค่า Firebase</button>
+      <button class="btn btn-outline" onclick="syncFirebaseCloud()" title="ซิงค์ข้อมูลกับ Firebase ทันที">☁️ ซิงค์ Cloud</button>
+      <button class="btn btn-outline" onclick="scrollToEl('compareSection')" title="ระบบเปรียบเทียบแผน">🔄 เปรียบเทียบแผน</button>
+      <button class="btn btn-outline" onclick="scrollToEl('simSection')" title="ระบบจำลองดอกเบี้ย">🎯 ตัวจำลองดอกเบี้ย</button>
+      <button class="btn" id="btnEditToggle" onclick="toggleEditMode()" title="เปิด/ปิดการแก้ไขข้อมูล">✏️ โหมดแก้ไขข้อมูล</button>
+      <button class="btn" onclick="openAddModal('income')" title="เพิ่มรายการรายได้ใหม่">➕ เพิ่มรายได้</button>
+      <button class="btn" onclick="openAddModal('expense')" title="เพิ่มรายการค่าใช้จ่ายใหม่">➕ เพิ่มค่าใช้จ่าย</button>
+      <button class="btn" onclick="exportData()" title="สำรองข้อมูล JSON">💾 สำรองข้อมูล</button>
+      <button class="btn" onclick="document.getElementById('fileInput').click()" title="นำเข้าข้อมูล JSON">📂 นำเข้า</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmReset()" title="คืนค่าข้อมูลตั้งต้น">🔄 คืนค่าเดิม</button>
+      <button class="btn btn-sm" onclick="window.print()" title="พิมพ์หรือบันทึกเป็น PDF">🖨️ พิมพ์</button>
+      <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </div>
+
+  <!-- Scenario Selector Strip -->
+  <div class="seg-bar">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:600;color:var(--tx-sec)">สถานการณ์ปี 70:</span>
+      <div class="seg" id="scSeg"></div>
+    </div>
+    <div id="editModeIndicator" style="display:none">
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:12px;font-weight:600;border:1px solid #fde68a">
+        ✏️ โหมดแก้ไขข้อมูลเปิดอยู่
+      </span>
+    </div>
+  </div>
+
+  <!-- KPI Summary Cards -->
+  <div class="kpis" id="kpis"></div>
+
+  <!-- MODULE 1: PLAN & DIMENSION COMPARISON ENGINE -->
+  <section class="compare-box" id="compareSection">
+    <div class="compare-head">
+      <div>
+        <h2 style="color:var(--c-pro)">🔄 ระบบเปรียบเทียบแผนและมิติการเงิน (Multi-Dimensional Comparison)</h2>
+        <div class="sub">เลือกจับคู่เปรียบเทียบระหว่าง 2 แผน และเลือกมิติที่ต้องการเจาะลึก (รวมถึงเทียบกับผลจำลองดอกเบี้ยสด)</div>
+      </div>
+      <div class="compare-controls">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:var(--mu);font-weight:500">แผนฐาน:</span>
+          <select id="cmpPlanA" onchange="updateComparison()" style="font:inherit;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd)"></select>
+        </div>
+        <span class="compare-vs">VS</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:var(--mu);font-weight:500">แผนเปรียบเทียบ:</span>
+          <select id="cmpPlanB" onchange="updateComparison()" style="font:inherit;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd);background:#fffbeb;font-weight:600"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Presets -->
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      <span style="font-size:12px;color:var(--mu);font-weight:500">เปรียบเทียบด่วน:</span>
+      <button class="btn btn-sm" onclick="setCmpPreset('none','d25')">⚡ ไม่ลดเลย VS ลด .25</button>
+      <button class="btn btn-sm" onclick="setCmpPreset('none','d20')">⚡ ไม่ลดเลย VS ลด .20</button>
+      <button class="btn btn-sm" onclick="setCmpPreset('none','simLive')">⚡ ไม่ลดเลย VS ★ ผลจำลองดอกเบี้ยสด</button>
+      <button class="btn btn-sm" onclick="setCmpPreset('act69','d25')">⚡ ผลจริง 69 VS ขอตั้ง 70 (ลด .25)</button>
+    </div>
+
+    <!-- Dimension Selector Strip (Requirement A2: 4 Dimensions) -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:14px 0 10px;padding:10px 14px;background:var(--surface-alt);border-radius:10px;border:1px solid var(--bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;font-weight:600;color:var(--tx)">เลือกมิติที่ต้องการเปรียบเทียบ:</span>
+        <div class="dim-seg" id="dimSeg">
+          <button type="button" class="on" data-dim="overview" onclick="setCompareDimension('overview')">1. ภาพรวมรายได้-จ่าย-กำไร</button>
+          <button type="button" data-dim="interest" onclick="setCompareDimension('interest')">2. โครงสร้างดอกเบี้ยและ NIM</button>
+          <button type="button" data-dim="expense" onclick="setCompareDimension('expense')">3. ค่าใช้จ่าย 5 หมวด</button>
+          <button type="button" data-dim="business" onclick="setCompareDimension('business')">4. แผนธุรกิจและสินเชื่อ</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--mu)" id="dimSubDesc">
+        เปรียบเทียบรายได้รวม ค่าใช้จ่ายรวม และกำไรสุทธิ
+      </div>
+    </div>
+
+    <!-- Comparison Metric Cards -->
+    <div class="cmp-kpis" id="cmpKpis"></div>
+
+    <!-- Comparison Chart and Variance Table -->
+    <div class="grid2" style="margin-top:16px">
+      <div class="card" style="box-shadow:none;border-color:var(--bd)">
+        <h2 id="cmpChartTitle">กราฟเปรียบเทียบ แผน 1 VS แผน 2 (ล้านบาท)</h2>
+        <div class="chart-box" id="cmpChartBox"></div>
+      </div>
+      <div class="card" style="box-shadow:none;border-color:var(--bd)">
+        <h2>ตารางสรุปผลต่าง (Variance Table)</h2>
+        <div class="tablewrap" style="margin-top:8px"><table id="tCmpDetail"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 2: WHAT-IF INTEREST RATE SIMULATOR -->
+  <section class="sim-box" id="simSection">
+    <div class="sim-head">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="sim-badge">What-If Simulator</span>
+        <h2 style="color:var(--c-rev)">🎯 เครื่องมือจำลองอัตราดอกเบี้ยและผลประกอบการ</h2>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="resetSim()">↺ คืนค่า 0.00%</button>
+        <button class="btn btn-sm btn-success" onclick="openSaveScenarioModal()">💾 บันทึกเป็นสถานการณ์ใหม่</button>
+        <button class="btn btn-sm btn-outline" onclick="applySimLive()">👁️ ดูกราฟสด</button>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--tx-sec);margin-bottom:10px">
+      ทดลองปรับอัตราดอกเบี้ยเงินให้กู้และเงินรับฝาก ระบบจะคำนวณผลกระทบต่อรายรับดอกเบี้ย, ต้นทุนเงินฝาก, และประมาณการกำไรสุทธิแบบ Real-time และเชื่อมต่อกับการเปรียบเทียบทันที
+    </div>
+
+    <div class="sim-grid">
+      <!-- Loan Rate -->
+      <div class="sim-col">
+        <div class="sim-col-title">
+          <span>อัตราดอกเบี้ยเงินให้กู้ (สินเชื่อ)</span>
+          <span style="font-size:11px;color:var(--mu)">ฐานคำนวณ: 830 ล้านบาท</span>
+        </div>
+        <div class="slider-group">
+          <input type="range" id="simLoanRange" min="-1.00" max="0.50" step="0.05" value="-0.25" oninput="onSimChange('loan',this.value)">
+          <div class="slider-val" id="simLoanVal">-0.25%</div>
+        </div>
+        <div class="presets">
+          <span style="font-size:11px;color:var(--mu);align-self:center">เลือกด่วน:</span>
+          <button onclick="setSimPreset('loan',0)">ไม่ลด (0.00%)</button>
+          <button onclick="setSimPreset('loan',-0.10)">ลด 0.10%</button>
+          <button onclick="setSimPreset('loan',-0.15)">ลด 0.15%</button>
+          <button onclick="setSimPreset('loan',-0.20)">ลด 0.20%</button>
+          <button onclick="setSimPreset('loan',-0.25)">ลด 0.25%</button>
+          <button onclick="setSimPreset('loan',-0.50)">ลด 0.50%</button>
+        </div>
+      </div>
+
+      <!-- Deposit Rate -->
+      <div class="sim-col">
+        <div class="sim-col-title">
+          <span>อัตราดอกเบี้ยเงินรับฝาก (ต้นทุนเงินฝาก)</span>
+          <span style="font-size:11px;color:var(--mu)">ฐานคำนวณ: 205 ล้านบาท</span>
+        </div>
+        <div class="slider-group">
+          <input type="range" id="simDepRange" min="-1.00" max="0.50" step="0.05" value="-0.20" oninput="onSimChange('dep',this.value)">
+          <div class="slider-val" id="simDepVal">-0.20%</div>
+        </div>
+        <div class="presets">
+          <span style="font-size:11px;color:var(--mu);align-self:center">เลือกด่วน:</span>
+          <button onclick="setSimPreset('dep',0)">ไม่ลด (0.00%)</button>
+          <button onclick="setSimPreset('dep',-0.10)">ลด 0.10%</button>
+          <button onclick="setSimPreset('dep',-0.15)">ลด 0.15%</button>
+          <button onclick="setSimPreset('dep',-0.20)">ลด 0.20%</button>
+          <button onclick="setSimPreset('dep',-0.25)">ลด 0.25%</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Simulation KPI Cards -->
+    <div class="sim-results">
+      <div class="cmp-kpi" style="background:#fff">
+        <div class="cmp-lbl">ดอกเบี้ยรับเงินให้กู้จำลอง</div>
+        <div class="cmp-val" id="simResLoan">-</div>
+        <div class="cmp-delta" id="simDeltaLoan">-</div>
+      </div>
+      <div class="cmp-kpi" style="background:#fff">
+        <div class="cmp-lbl">ดอกเบี้ยจ่ายเงินรับฝากจำลอง</div>
+        <div class="cmp-val" id="simResDep">-</div>
+        <div class="cmp-delta" id="simDeltaDep">-</div>
+      </div>
+      <div class="cmp-kpi" style="background:#fff">
+        <div class="cmp-lbl">รายได้ดอกเบี้ยสุทธิ (Net Margin)</div>
+        <div class="cmp-val" id="simResNetInt">-</div>
+        <div class="cmp-delta" id="simDeltaNetInt">-</div>
+      </div>
+      <div class="cmp-kpi" style="background:#fff;border-color:var(--c-rev)">
+        <div class="cmp-lbl" style="font-weight:600;color:var(--c-rev)">ประมาณการกำไรสุทธิจำลอง</div>
+        <div class="cmp-val" id="simResProfit" style="color:var(--c-rev)">-</div>
+        <div class="cmp-delta" id="simDeltaProfit">-</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 3: CORE SVG CHARTS ROW 1 -->
+  <div class="grid2">
+    <div class="card">
+      <h2>แนวโน้ม 3 ปี: รายได้ · ค่าใช้จ่าย · กำไรสุทธิ (ล้านบาท)</h2>
+      <div class="sub">เปรียบเทียบผลจริงปี 68, ผลจริงปี 69 และขอตั้งปี 70 (ตามสถานการณ์ที่เลือก)</div>
+      <div class="chart-box" id="chBox1"></div>
+    </div>
+    <div class="card">
+      <h2>เปรียบเทียบทุกสถานการณ์ปี 2570 (ล้านบาท)</h2>
+      <div class="sub">เปรียบเทียบรายได้ ค่าใช้จ่าย และกำไรสุทธิ ในแต่ละสถานการณ์ดอกเบี้ย</div>
+      <div class="chart-box" id="chBox2"></div>
+    </div>
+  </div>
+
+  <!-- MODULE 4: CORE SVG CHARTS ROW 2 -->
+  <div class="grid2">
+    <div class="card">
+      <h2>ค่าใช้จ่ายรายหมวด (ล้านบาท)</h2>
+      <div class="sub">โครงสร้างค่าใช้จ่าย 5 หมวดหลัก</div>
+      <div class="chart-box" id="chBox3"></div>
+    </div>
+    <div class="card">
+      <h2>แผนธุรกิจ: การจ่ายเงินกู้และการระดมทุน (ล้านบาท)</h2>
+      <div class="chart-box" id="chBox4" style="height:210px"></div>
+      <div class="tablewrap" style="margin-top:10px"><table id="biz"></table></div>
+    </div>
+  </div>
+
+  <!-- MODULE 5: SCENARIOS SUMMARY TABLE -->
+  <div class="card">
+    <h2>ตารางเปรียบเทียบสถานการณ์ปี 2570</h2>
+    <div class="sub">คลิกแถวเพื่อสลับดูสถานการณ์ที่ต้องการในหน้าจอทั้งหมด · หน่วย: บาท</div>
+    <div class="tablewrap"><table id="tscn"></table></div>
+    <div class="sub" id="sv" style="margin-top:8px"></div>
+  </div>
+
+  <!-- MODULE 6: INCOME DETAIL TABLE -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2>โครงสร้างรายได้</h2>
+      <div class="edit-actions" id="incAddBtn" style="display:none">
+        <button class="btn btn-sm btn-outline" onclick="openAddModal('income','ดอกเบี้ยรับ')">+ เพิ่มรายได้ดอกเบี้ย</button>
+        <button class="btn btn-sm btn-outline" onclick="openAddModal('income','รายได้อื่น')">+ เพิ่มรายได้อื่น</button>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="tinc"></table></div>
+  </div>
+
+  <!-- MODULE 7: EXPENSE DETAIL TABLE -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2>ค่าใช้จ่ายรายรายการ</h2>
+      <div style="display:flex;align-items:center;gap:8px">
+        <select id="gsel" style="font:inherit;font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)"></select>
+        <div class="edit-actions" id="expAddBtn" style="display:none">
+          <button class="btn btn-sm btn-outline" onclick="openAddModal('expense')">+ เพิ่มค่าใช้จ่ายในหมวด</button>
+        </div>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="texp"></table></div>
+    <div class="sub" style="margin-top:8px">เปลี่ยนแปลง = ขอตั้งปี 70 เทียบกับผลจริงปี 69 · สีแดง = เพิ่มขึ้น (ต้นทุนเพิ่ม), สีเขียว = ลดลง (ประหยัดงบ)</div>
+  </div>
+
+  <!-- MODULE 8: CAPEX TABLE -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2>หมวดครุภัณฑ์และสิ่งก่อสร้าง</h2>
+      <div class="edit-actions" id="capAddBtn" style="display:none">
+        <button class="btn btn-sm btn-outline" onclick="openAddModal('capex')">+ เพิ่มรายการครุภัณฑ์</button>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="tcap"></table></div>
+  </div>
+</div>
+
+<!-- SVG Tooltip -->
+<div id="tip"></div>
+
+<!-- Modal Dialog for Firebase Settings (Requirement A1) -->
+<div class="modal-overlay" id="firebaseModal">
+  <div class="modal-box">
+    <div class="modal-title">🔥 การเชื่อมต่อฐานข้อมูล Firebase (coop-budget-2570)</div>
+    <p style="font-size:13px;color:var(--tx-sec);margin:0 0 12px">
+      เชื่อมต่อฐานข้อมูล Google Firebase Realtime Database สำหรับโปรเจกต์ <b>coop-budget-2570</b>
+    </p>
+    
+    <div class="form-group">
+      <label>หรือ วางโค้ด firebaseConfig ทั้งก้อนที่นี่ (ระบบจะแยกให้อัตโนมัติ):</label>
+      <textarea id="fbPasteSnippet" rows="3" placeholder="วางโค้ด const firebaseConfig = { ... } จากหน้า Firebase Console ที่นี่..." oninput="autoParseFirebaseSnippet(this.value)"></textarea>
+    </div>
+
+    <form id="firebaseForm" onsubmit="handleFirebaseSubmit(event)">
+      <div class="form-group">
+        <label>Firebase Database URL</label>
+        <input type="text" id="fbDbUrl" value="https://coop-budget-2570-default-rtdb.asia-southeast1.firebasedatabase.app" placeholder="https://coop-budget-2570-default-rtdb.asia-southeast1.firebasedatabase.app" required>
+      </div>
+      <div class="form-group">
+        <label>Database Path / Node Name</label>
+        <input type="text" id="fbNode" value="coop_budget_2570" placeholder="coop_budget_2570">
+      </div>
+      <div style="background:var(--surface-soft);padding:10px 14px;border-radius:8px;font-size:12px;color:var(--tx-sec);margin-bottom:14px">
+        🟢 <b>เชื่อมต่อพร้อมใช้งาน:</b> ฐานข้อมูล Realtime Database <code>coop-budget-2570-default-rtdb</code> ได้รับการกำหนดค่าและซิงค์ข้อมูลเริ่มต้นเรียบร้อยแล้ว
+      </div>
+      <div class="modal-btns">
+        <button type="button" class="btn btn-danger" onclick="disconnectFirebase()">ตัดการเชื่อมต่อ</button>
+        <button type="button" class="btn" onclick="closeFirebaseModal()">ปิด</button>
+        <button type="submit" class="btn btn-primary">บันทึก & ทดสอบเชื่อมต่อ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Dialog for Add/Edit -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">แก้ไขรายการ</div>
+    <form id="editForm" onsubmit="handleModalSubmit(event)">
+      <input type="hidden" id="fType">
+      <input type="hidden" id="fCat">
+      <input type="hidden" id="fIdx">
+      <div class="form-group" id="grpCatSelect">
+        <label>หมวดหมู่</label>
+        <select id="fCatSelect"></select>
+      </div>
+      <div class="form-group">
+        <label>ชื่อรายการ</label>
+        <input type="text" id="fName" required>
+      </div>
+      <div class="form-group">
+        <label>ยอดขอตั้ง ปี 2569 (บาท)</label>
+        <input type="number" id="fReq69" step="any" required>
+      </div>
+      <div class="form-group">
+        <label>ยอดผลจริง ปี 2569 (บาท)</label>
+        <input type="number" id="fAct69" step="any" required>
+      </div>
+      <div class="form-group">
+        <label>ยอดขอตั้ง ปี 2570 (บาท)</label>
+        <input type="number" id="fReq70" step="any" required>
+      </div>
+      <div class="modal-btns">
+        <button type="button" class="btn" onclick="closeModal()">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Dialog for Save Scenario -->
+<div class="modal-overlay" id="scenarioModal">
+  <div class="modal-box">
+    <div class="modal-title">💾 บันทึกสถานการณ์จำลองใหม่</div>
+    <form onsubmit="handleSaveScenarioSubmit(event)">
+      <div class="form-group">
+        <label>ชื่อสถานการณ์จำลอง</label>
+        <input type="text" id="scName" placeholder="เช่น กู้ลด .15 ฝากลด .10" required>
+      </div>
+      <div style="background:var(--surface-alt);padding:12px;border-radius:8px;font-size:12px;margin-bottom:12px">
+        <div>• ปรับดอกเบี้ยกู้: <b id="scDescLoan">-</b></div>
+        <div>• ปรับดอกเบี้ยฝาก: <b id="scDescDep">-</b></div>
+        <div>• กำไรสุทธิคาดการณ์: <b id="scDescProfit" style="color:var(--c-pro)">-</b></div>
+      </div>
+      <div class="modal-btns">
+        <button type="button" class="btn" onclick="closeScenarioModal()">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึกและเปิดใช้งาน</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMsg">บันทึกสำเร็จ</span>
+</div>
+
+<script>
+// RAW DEFAULT DATA
+const DEFAULT_D = {
+  "y69": {
+    "income_total": [95903000, 98082238.7, 101197500],
+    "exp_groups": [
+      ["ดอกเบี้ยจ่าย", 15510000, 16201739.09, 16900000],
+      ["เจ้าหน้าที่", 0, 0, 0],
+      ["อาคารสถานที่และอุปกรณ์", 0, 0, 0],
+      ["สมาชิก", 0, 0, 0],
+      ["ดำเนินงาน", 0, 0, 0]
+    ],
+    "exp_total": [24839400, 23918941.19, 25669400],
+    "profit": [71063600, 74163297.51, 75528100]
+  },
+  "base": {
+    "income_int": [
+      ["ดอกเบี้ยรับจากเงินให้กู้", 98640000, 101287511, 103970000],
+      ["ดอกเบี้ยรับจากเงินฝากธนาคาร", 80000, 177065.87, 130000],
+      ["ดอกเบี้ยรับเงินฝากสหกรณ์อื่น", 700000, 1482616.91, 700000],
+      ["ผลตอบแทนจากเงินลงทุน", 1650000, 1772796.5, 1700000]
+    ],
+    "income_non": [
+      ["ค่าธรรมเนียมแรกเข้า", 14000, 17700, 13000],
+      ["ค่าธรรมเนียมเงินรับฝากออมทรัพย์พิเศษ", 3000, 9050, 4000],
+      ["ค่าธรรมเนียมในการเปลี่ยนสัญญาก่อนกำหนด", 20000, 12200, 15000],
+      ["กำไรจากการจำหน่ายสินทรัพย์", 500, 143, 500],
+      ["รายได้ตัวแทน บริษัทประกัน", 0, 13339.68, 14000],
+      ["รายได้อื่นๆ", 20000, 12923.41, 10000],
+      ["รายได้จากการอุดหนุน/รับบริจาค", 70000, 71652.8, 70000]
+    ],
+    "detail": {
+      "ดอกเบี้ยจ่าย": [
+        ["ดอกเบี้ยจ่ายเงินรับฝาก", 16700000, 17743929.12, 20600000],
+        ["ดอกเบี้ยจ่ายเงินกู้", 200000, 407302.93, 750000]
+      ],
+      "เจ้าหน้าที่": [
+        ["เงินเดือน", 2220000, 2150520, 2380000],
+        ["เงินสวัสดิการเจ้าหน้าที่", 150000, 75339, 120000],
+        ["เงินบำเหน็จเจ้าหน้าที่", 350000, 368730, 390000],
+        ["เงินสมทบกองทุนประกันสังคม", 54000, 48414, 65000],
+        ["ค่าล่วงเวลา", 20000, 7299.99, 20000],
+        ["ค่าเบี้ยเลี้ยง พาหนะ ที่พัก จนท.", 100000, 73490, 90000],
+        ["เงินชดเชยตามกฎหมายแรงงาน จนท.", 80000, 71640, 53000]
+      ],
+      "ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์": [
+        ["ค่าประกันอัคคีภัย", 15000, 13957.08, 14000],
+        ["ค่าซ่อมแซมบำรุงรักษาอาคารและอุปกรณ์", 30000, 39342.5, 50000],
+        ["ค่าดูแลรักษาโปรแกรม", 100000, 94512, 100000],
+        ["สิทธิในการใช้ประโยชน์ซอฟต์แวร์", 27400, 37333.34, 20000],
+        ["ค่าเช่าพื้นที่หน้าเว็บไซต์", 10000, 10000, 10000],
+        ["ค่าธรรมเนียมแรกเข้าระบบ API", 150000, 0, 0],
+        ["ค่าเสื่อมราคา-เครื่องใช้สำนักงาน", 600000, 489516.17, 550000],
+        ["ค่าเสื่อมราคา-โรงจอดรถ", 70000, 67817.8, 70000],
+        ["ค่าเสื่อมราคา-อาคารสำนักงาน", 710000, 701936.45, 710000],
+        ["ค่าเสื่อมราคา-ครุภัณฑ์ไฟฟ้า", 140000, 161489.19, 165000]
+      ],
+      "ค่าใช้จ่ายเกี่ยวกับสมาชิก": [
+        ["ค่าของสมนาคุณสมาชิก", 1140000, 1135000, 750000]
+      ],
+      "ค่าใช้จ่ายดำเนินงานอื่นๆ": [
+        ["ค่าตอบแทนเจ้าหน้าที่ 2 หน่วย", 34000, 34000, 34000],
+        ["ค่าตอบแทนเจ้าหน้าที่ 2 หน่วย (งานทรัพยากร)", 0, 0, 10000],
+        ["ค่าตอบแทนผู้ตรวจสอบกิจการ", 72000, 71000, 72000],
+        ["ค่าธรรมเนียมผู้สอบบัญชี", 80000, 70000, 70000],
+        ["ค่าเบี้ยเลี้ยง พาหนะ ที่พัก กรรมการ", 40000, 12754, 35000],
+        ["ค่าเบี้ยประชุม", 150000, 136250, 150000],
+        ["ค่ารับรอง", 50000, 33069, 50000],
+        ["ค่าน้ำประปา ค่าไฟฟ้า", 72000, 54568.11, 72000],
+        ["ค่าโทรศัพท์", 40000, 32540.6, 40000],
+        ["ค่าธรรมเนียมธนาคาร", 15000, 17133.53, 15000],
+        ["ค่าไปรษณียภัณฑ์", 12000, 7073, 10000],
+        ["ค่าเครื่องเขียนแบบพิมพ์", 40000, 41443, 40000],
+        ["ค่าวัสดุสำนักงานสิ้นเปลืองใช้ไป", 150000, 140858.75, 150000],
+        ["ค่าใช้จ่ายในวันประชุมใหญ่", 1660000, 1507110, 1600000],
+        ["ค่าเบี้ยประกันชีวิตกรรมการ จนท. ผู้ตรวจ", 20000, 17085, 19000],
+        ["ค่าเบี้ยประกันเงินสด", 17000, 0, 17000],
+        ["ค่าบำรุงชมรมภาคใต้", 3000, 0, 3000],
+        ["ค่าบริการสารสนเทศ", 0, 0, 12000],
+        ["ค่าตอบแทนตรวจรับพัสดุ", 2000, 0, 0],
+        ["ค่าภาษีที่ดินและสิ่งปลูกสร้าง/ภาษีป้าย", 35000, 34116.75, 35000],
+        ["ค่าจ้างเหมาบริการ", 198000, 194730.96, 204000],
+        ["ค่าใช้จ่ายเบ็ดเตล็ด", 70000, 46349.56, 60000],
+        ["ค่าเช่าเครื่องถ่ายเอกสาร", 20000, 21732.77, 24000],
+        ["ค่าสมัครชมรมเจ้าหน้าที่/ผู้จัดการ สอ.", 3000, 0, 0],
+        ["ค่าดำเนินคดี", 20000, 0, 20000]
+      ]
+    },
+    "capex": [
+      ["ค่าพัฒนาโปรแกรม", 100000, 0, 250000],
+      ["ค่าพัฒนาระบบด้านเทคโนโลยี", 300000, 0, 300000],
+      ["ค่าครุภัณฑ์สำนักงาน", 600000, 0, 600000]
+    ],
+    "capex_total": [1000000, 0, 1150000]
+  },
+  "scn": {
+    "ไม่ลดเลย": {
+      "loan_int": 106045000,
+      "income_int_total": 108575000,
+      "income_total": 108701500,
+      "exp_total": 30009000,
+      "int_exp": 21710000,
+      "int_exp_dep": 20960000,
+      "int_exp_loan": 750000,
+      "profit": 78692500,
+      "groups": [
+        ["ดอกเบี้ยจ่าย", 21710000],
+        ["เจ้าหน้าที่", 3118000],
+        ["ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์", 1689000],
+        ["ค่าใช้จ่ายเกี่ยวกับสมาชิก", 750000],
+        ["ค่าใช้จ่ายดำเนินงาน", 2742000]
+      ]
+    },
+    "ลด .10": {
+      "loan_int": 105215000,
+      "income_int_total": 107745000,
+      "income_total": 107871500,
+      "exp_total": 29599000,
+      "int_exp": 21300000,
+      "int_exp_dep": 20550000,
+      "int_exp_loan": 750000,
+      "profit": 78272500,
+      "groups": [
+        ["ดอกเบี้ยจ่าย", 21300000],
+        ["เจ้าหน้าที่", 3118000],
+        ["ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์", 1689000],
+        ["ค่าใช้จ่ายเกี่ยวกับสมาชิก", 750000],
+        ["ค่าใช้จ่ายดำเนินงาน", 2742000]
+      ]
+    },
+    "ลด .20": {
+      "loan_int": 104385000,
+      "income_int_total": 106915000,
+      "income_total": 107041500,
+      "exp_total": 29599000,
+      "int_exp": 21300000,
+      "int_exp_dep": 20550000,
+      "int_exp_loan": 750000,
+      "profit": 77442500,
+      "groups": [
+        ["ดอกเบี้ยจ่าย", 21300000],
+        ["เจ้าหน้าที่", 3118000],
+        ["ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์", 1689000],
+        ["ค่าใช้จ่ายเกี่ยวกับสมาชิก", 750000],
+        ["ค่าใช้จ่ายดำเนินงาน", 2742000]
+      ]
+    },
+    "ลด .25": {
+      "loan_int": 103970000,
+      "income_int_total": 106500000,
+      "income_total": 106626500,
+      "exp_total": 29649000,
+      "int_exp": 21350000,
+      "int_exp_dep": 20600000,
+      "int_exp_loan": 750000,
+      "profit": 76977500,
+      "groups": [
+        ["ดอกเบี้ยจ่าย", 21350000],
+        ["เจ้าหน้าที่", 3118000],
+        ["ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์", 1689000],
+        ["ค่าใช้จ่ายเกี่ยวกับสมาชิก", 750000],
+        ["ค่าใช้จ่ายดำเนินงาน", 2742000]
+      ]
+    }
+  },
+  "plan": {
+    "members": [40, 88, 60],
+    "share_add": [19200000, 981560, 21180000],
+    "deposit_add": [64000000, 94390369.79, 112000000],
+    "loans": [
+      ["เงินกู้พิเศษ", 35600000, 11021900, 15450000],
+      ["เงินกู้ฉุกเฉิน", 21600000, 105665521.36, 66100000],
+      ["เงินกู้สามัญ", 603600000, 979954328.88, 883400000]
+    ],
+    "loan_total": [660800000, 1096641750.24, 964950000],
+    "dep_int_cut_total": 20550175.98,
+    "dep_int_nocut_total": 20958144.27
+  },
+  "tot": {
+    "income": [101197500, 104856999.17, 106626500],
+    "exp": [25669400, 26169384.6, 29649000],
+    "profit": [75528100, 78687614.57, 76977500],
+    "groups": [
+      ["ดอกเบี้ยจ่าย", 16900000, 18151232.05, 21350000],
+      ["เจ้าหน้าที่", 2974000, 2795432.99, 3118000],
+      ["ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์", 1924400, 1615904.53, 1689000],
+      ["ค่าใช้จ่ายเกี่ยวกับสมาชิก", 1140000, 1135000, 750000],
+      ["ค่าใช้จ่ายดำเนินงาน", 2731000, 2471815.03, 2742000]
+    ]
+  }
+}
+;
+
+// Active State
+;
+
+// Active State
+let D = JSON.parse(JSON.stringify(DEFAULT_D));
+let SC = ['ไม่ลดเลย', 'ลด .10', 'ลด .20', 'ลด .25'];
+let cur = 'ลด .25';
+let gsel = 'ทั้งหมด';
+let isEditMode = false;
+let customScenarios = [];
+let currentDimension = 'overview'; // 'overview', 'interest', 'expense', 'business'
+
+// Storage Keys
+const STORAGE_KEY = 'coop_budget_white_2570_v2';
+const STORAGE_SCN = 'coop_custom_scenarios_white_2570_v2';
+const STORAGE_FB = 'coop_firebase_config_v2';
+
+// Vibrant Palette
+const VIB_REV = '#10b981'; // Emerald Green
+const VIB_EXP = '#ef4444'; // Coral Red
+const VIB_PRO = '#2563eb'; // Royal Blue
+const VIB_INT = '#f59e0b'; // Amber Gold
+const VIB_CMP_A = '#2563eb'; // Blue for Plan A
+const VIB_CMP_B = '#10b981'; // Green for Plan B
+const VIB_ACC = '#8b5cf6'; // Purple
+
+// Formatting
+const f = n => Math.round(Number(n)||0).toLocaleString('th-TH');
+const m = n => (Number(n)||0) / 1e6;
+const pc = (a, b) => b ? ((a - b) / Math.abs(b) * 100) : 0;
+const dl = (a, b, inv) => {
+  const d = a - b, p = pc(a, b);
+  const bad = inv ? d > 0 : d < 0;
+  return `<span class="${d === 0 ? '' : (bad ? 'dn' : 'up')}">${d >= 0 ? '▲' : '▼'} ${f(Math.abs(d))} (${p >= 0 ? '+' : ''}${p.toFixed(1)}%)</span>`;
+};
+
+// Toast notification
+function showToast(msg, isErr) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').innerText = msg;
+  document.getElementById('toastIcon').innerText = isErr ? '✕' : '✓';
+  t.style.background = isErr ? '#991b1b' : '#0f172a';
+  t.classList.add('active');
+  setTimeout(() => t.classList.remove('active'), 2500);
+}
+
+// -------------------------------------------------------------------
+// FIREBASE CLOUD DATABASE INTEGRATION (Requirement A1)
+// -------------------------------------------------------------------
+const DEFAULT_FB_URL = 'https://coop-budget-2570-default-rtdb.asia-southeast1.firebasedatabase.app';
+const DEFAULT_FB_NODE = 'coop_budget_2570';
+
+let fbDbUrl = DEFAULT_FB_URL;
+let fbNode = DEFAULT_FB_NODE;
+let fbEventSource = null;
+
+function setFbStatus(isOnline) {
+  const badge = document.getElementById('fbStatusBadge');
+  const dot = document.getElementById('fbDot');
+  const txt = document.getElementById('fbStatusText');
+  if (isOnline) {
+    badge.className = 'fb-badge online';
+    dot.className = 'dot dot-green';
+    txt.innerText = '🟢 เชื่อมต่อ Firebase แล้ว';
+  } else {
+    badge.className = 'fb-badge offline';
+    dot.className = 'dot dot-gray';
+    txt.innerText = '⚪ โหมดออฟไลน์ (LocalStorage)';
+  }
+}
+
+function initFirebase() {
+  const saved = localStorage.getItem(STORAGE_FB);
+  if (saved) {
+    try {
+      const cfg = JSON.parse(saved);
+      if (cfg && cfg.databaseURL) {
+        fbDbUrl = cfg.databaseURL.replace(/\/$/, '');
+        fbNode = cfg.node || DEFAULT_FB_NODE;
+      }
+    } catch(e) {}
+  }
+  checkAndSyncFirebase();
+}
+
+function checkAndSyncFirebase() {
+  fetch(`${fbDbUrl}/${fbNode}.json`)
+    .then(res => {
+      if (!res.ok) throw new Error('Status ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      setFbStatus(true);
+      if (data && data.data) {
+        try {
+          const parsedD = JSON.parse(data.data);
+          if (parsedD && parsedD.base) {
+            D = parsedD;
+            if (data.customScenarios) {
+              customScenarios = data.customScenarios;
+              customScenarios.forEach(k => {
+                if (!SC.includes(k) && D.scn[k]) SC.push(k);
+              });
+            }
+            recalcAll();
+            render();
+          }
+        } catch(e) { console.warn('Parse D error', e); }
+      } else {
+        pushToFirebaseCloud(true);
+      }
+      listenFirebaseChanges();
+    })
+    .catch(err => {
+      console.warn('Firebase connect error:', err);
+      setFbStatus(false);
+    });
+}
+
+function pushToFirebaseCloud(silent) {
+  const payload = {
+    data: JSON.stringify(D),
+    customScenarios: customScenarios,
+    updatedAt: new Date().toISOString()
+  };
+  
+  fetch(`${fbDbUrl}/${fbNode}.json`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    setFbStatus(true);
+    if (!silent) showToast('ซิงค์ข้อมูลขึ้น Firebase Cloud สำเร็จ');
+  })
+  .catch(err => {
+    console.warn('Firebase push error:', err);
+    setFbStatus(false);
+    if (!silent) showToast('ซิงค์ขึ้น Firebase ไม่สำเร็จ (ใช้ LocalStorage แทน)', true);
+  });
+}
+
+function syncFirebaseCloud() {
+  showToast('กำลังซิงค์กับ Firebase Cloud...');
+  checkAndSyncFirebase();
+}
+
+function listenFirebaseChanges() {
+  if (fbEventSource) {
+    try { fbEventSource.close(); } catch(e) {}
+  }
+  try {
+    fbEventSource = new EventSource(`${fbDbUrl}/${fbNode}.json`);
+    fbEventSource.addEventListener('put', e => {
+      try {
+        const payload = JSON.parse(e.data);
+        if (payload && payload.data) {
+          const cloudData = payload.data;
+          const parsedD = typeof cloudData.data === 'string' ? JSON.parse(cloudData.data) : cloudData.D;
+          if (parsedD && parsedD.base) {
+            D = parsedD;
+            if (cloudData.customScenarios) {
+              customScenarios = cloudData.customScenarios;
+              customScenarios.forEach(k => {
+                if (!SC.includes(k) && D.scn[k]) SC.push(k);
+              });
+            }
+            recalcAll();
+            render();
+          }
+        }
+      } catch(err) {}
+    });
+  } catch(err) {
+    console.warn('EventSource listener error:', err);
+  }
+}
+
+function autoParseFirebaseSnippet(text) {
+  if (!text) return;
+  const dbUrlMatch = text.match(/https:\/\/[a-zA-Z0-9\-_.]+\.(?:firebasedatabase\.app|firebaseio\.com)/);
+  if (dbUrlMatch) {
+    document.getElementById('fbDbUrl').value = dbUrlMatch[0];
+    showToast('สกัด Database URL สำเร็จ');
+  }
+}
+
+function openFirebaseModal() {
+  document.getElementById('fbDbUrl').value = fbDbUrl;
+  document.getElementById('fbNode').value = fbNode;
+  document.getElementById('firebaseModal').classList.add('active');
+}
+
+function closeFirebaseModal() {
+  document.getElementById('firebaseModal').classList.remove('active');
+}
+
+function handleFirebaseSubmit(e) {
+  e.preventDefault();
+  const dbUrl = document.getElementById('fbDbUrl').value.trim().replace(/\/$/, '');
+  const node = document.getElementById('fbNode').value.trim() || DEFAULT_FB_NODE;
+
+  fbDbUrl = dbUrl;
+  fbNode = node;
+  localStorage.setItem(STORAGE_FB, JSON.stringify({ databaseURL: dbUrl, node: node }));
+  closeFirebaseModal();
+  showToast('เชื่อมต่อ Firebase: ' + dbUrl);
+  checkAndSyncFirebase();
+}
+
+function disconnectFirebase() {
+  localStorage.removeItem(STORAGE_FB);
+  fbDbUrl = DEFAULT_FB_URL;
+  fbNode = DEFAULT_FB_NODE;
+  if (fbEventSource) {
+    try { fbEventSource.close(); } catch(e) {}
+  }
+  setFbStatus(false);
+  closeFirebaseModal();
+  showToast('ตัดการเชื่อมต่อ Firebase แล้ว (ใช้โหมดออฟไลน์)');
+}
+
+// LocalStorage Load & Save
+function loadStoredData() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const parsed = JSON.parse(s);
+      if (parsed && parsed.base && parsed.scn) D = parsed;
+    }
+    const scSaved = localStorage.getItem(STORAGE_SCN);
+    if (scSaved) {
+      customScenarios = JSON.parse(scSaved);
+      customScenarios.forEach(k => {
+        if (!SC.includes(k) && D.scn[k]) SC.push(k);
+      });
+    }
+  } catch (e) {
+    console.warn('LocalStorage error:', e);
+  }
+}
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(D));
+    localStorage.setItem(STORAGE_SCN, JSON.stringify(customScenarios));
+    if (firebaseDb) {
+      pushToFirebaseCloud();
+    }
+  } catch (e) {
+    console.error('Save error:', e);
+  }
+}
+
+function confirmReset() {
+  if (confirm('คุณต้องการคืนค่าข้อมูลตั้งต้นทั้งหมดใช่หรือไม่? ข้อมูลที่แก้ไขและสถานการณ์จำลองที่บันทึกไว้จะถูกรีเซ็ต')) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_SCN);
+    D = JSON.parse(JSON.stringify(DEFAULT_D));
+    SC = ['ไม่ลดเลย', 'ลด .10', 'ลด .20', 'ลด .25'];
+    customScenarios = [];
+    cur = 'ลด .25';
+    recalcAll();
+    render();
+    if (firebaseDb) pushToFirebaseCloud();
+    showToast('คืนค่าข้อมูลตั้งต้นสำเร็จ');
+  }
+}
+
+// -------------------------------------------------------------------
+// RECALCULATION ENGINE
+// -------------------------------------------------------------------
+function recalcAll() {
+  const B = D.base;
+  const otherIncReq69 = B.income_non.reduce((t, r) => t + Number(r[1]||0), 0);
+  const otherIncAct69 = B.income_non.reduce((t, r) => t + Number(r[2]||0), 0);
+  const otherIncReq70 = B.income_non.reduce((t, r) => t + Number(r[3]||0), 0);
+
+  const otherIntReq69 = B.income_int.slice(1).reduce((t, r) => t + Number(r[1]||0), 0);
+  const otherIntAct69 = B.income_int.slice(1).reduce((t, r) => t + Number(r[2]||0), 0);
+  const otherIntReq70 = B.income_int.slice(1).reduce((t, r) => t + Number(r[3]||0), 0);
+
+  let otherExpReq69 = 0, otherExpAct69 = 0, otherExpReq70 = 0;
+  const groupTotals = {};
+  for (const g in B.detail) {
+    const it = B.detail[g];
+    const s1 = it.reduce((t, r) => t + Number(r[1]||0), 0);
+    const s2 = it.reduce((t, r) => t + Number(r[2]||0), 0);
+    const s3 = it.reduce((t, r) => t + Number(r[3]||0), 0);
+    groupTotals[g] = [s1, s2, s3];
+    if (g !== 'ดอกเบี้ยจ่าย') {
+      otherExpReq69 += s1;
+      otherExpAct69 += s2;
+      otherExpReq70 += s3;
+    }
+  }
+
+  if (B.capex) {
+    const c1 = B.capex.reduce((t, r) => t + Number(r[1]||0), 0);
+    const c2 = B.capex.reduce((t, r) => t + Number(r[2]||0), 0);
+    const c3 = B.capex.reduce((t, r) => t + Number(r[3]||0), 0);
+    B.capex_total = [c1, c2, c3];
+  }
+
+  SC.forEach(k => {
+    const s = D.scn[k];
+    if (!s) return;
+    s.income_int_total = Number(s.loan_int||0) + otherIntReq70;
+    s.income_total = s.income_int_total + otherIncReq70;
+    s.int_exp = Number(s.int_exp_dep||0) + Number(s.int_exp_loan || 750000);
+    s.exp_total = s.int_exp + otherExpReq70;
+    s.profit = s.income_total - s.exp_total;
+
+    s.groups = [
+      ['ดอกเบี้ยจ่าย', s.int_exp],
+      ['เจ้าหน้าที่', groupTotals['เจ้าหน้าที่'] ? groupTotals['เจ้าหน้าที่'][2] : 3118000],
+      ['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์', groupTotals['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์'] ? groupTotals['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์'][2] : 1689000],
+      ['ค่าใช้จ่ายเกี่ยวกับสมาชิก', groupTotals['ค่าใช้จ่ายเกี่ยวกับสมาชิก'] ? groupTotals['ค่าใช้จ่ายเกี่ยวกับสมาชิก'][2] : 750000],
+      ['ค่าใช้จ่ายดำเนินงาน', groupTotals['ค่าใช้จ่ายดำเนินงานอื่นๆ'] ? groupTotals['ค่าใช้จ่ายดำเนินงานอื่นๆ'][2] : 2742000]
+    ];
+  });
+
+  if (!D.scn[cur]) cur = SC[0];
+  const scur = D.scn[cur];
+
+  D.tot = {
+    income: [
+      B.income_int[0][1] + otherIntReq69 + otherIncReq69,
+      B.income_int[0][2] + otherIntAct69 + otherIncAct69,
+      scur.income_total
+    ],
+    exp: [
+      (B.detail['ดอกเบี้ยจ่าย'] ? B.detail['ดอกเบี้ยจ่าย'].reduce((t,r)=>t+Number(r[1]||0),0) : 16900000) + otherExpReq69,
+      (B.detail['ดอกเบี้ยจ่าย'] ? B.detail['ดอกเบี้ยจ่าย'].reduce((t,r)=>t+Number(r[2]||0),0) : 18151232) + otherExpAct69,
+      scur.exp_total
+    ],
+    profit: [0, 0, scur.profit],
+    groups: [
+      ['ดอกเบี้ยจ่าย', groupTotals['ดอกเบี้ยจ่าย'] ? groupTotals['ดอกเบี้ยจ่าย'][0] : 16900000, groupTotals['ดอกเบี้ยจ่าย'] ? groupTotals['ดอกเบี้ยจ่าย'][1] : 18151232, scur.int_exp],
+      ['เจ้าหน้าที่', groupTotals['เจ้าหน้าที่'] ? groupTotals['เจ้าหน้าที่'][0] : 2974000, groupTotals['เจ้าหน้าที่'] ? groupTotals['เจ้าหน้าที่'][1] : 2795433, scur.groups[1][1]],
+      ['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์', groupTotals['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์'] ? groupTotals['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์'][0] : 1924400, groupTotals['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์'] ? groupTotals['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์'][1] : 1615905, scur.groups[2][1]],
+      ['ค่าใช้จ่ายเกี่ยวกับสมาชิก', groupTotals['ค่าใช้จ่ายเกี่ยวกับสมาชิก'] ? groupTotals['ค่าใช้จ่ายเกี่ยวกับสมาชิก'][0] : 1140000, groupTotals['ค่าใช้จ่ายเกี่ยวกับสมาชิก'] ? groupTotals['ค่าใช้จ่ายเกี่ยวกับสมาชิก'][1] : 1135000, scur.groups[3][1]],
+      ['ค่าใช้จ่ายดำเนินงาน', groupTotals['ค่าใช้จ่ายดำเนินงานอื่นๆ'] ? groupTotals['ค่าใช้จ่ายดำเนินงานอื่นๆ'][0] : 2731000, groupTotals['ค่าใช้จ่ายดำเนินงานอื่นๆ'] ? groupTotals['ค่าใช้จ่ายดำเนินงานอื่นๆ'][1] : 2471815, scur.groups[4][1]]
+    ]
+  };
+  D.tot.profit[0] = D.tot.income[0] - D.tot.exp[0];
+  D.tot.profit[1] = D.tot.income[1] - D.tot.exp[1];
+}
+
+// -------------------------------------------------------------------
+// TOOLTIP & SVG CHART HELPERS (100% OFFLINE BULLETPROOF)
+// -------------------------------------------------------------------
+const tip = document.getElementById('tip');
+function showTip(html, e) {
+  tip.innerHTML = html;
+  tip.classList.add('show');
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + w > window.innerWidth - 10) x = e.clientX - w - 14;
+  if (x < 10) x = 10;
+  if (y + h > window.innerHeight - 10) y = e.clientY - h - 14;
+  if (y < 10) y = 10;
+  tip.style.left = x + 'px';
+  tip.style.top = y + 'px';
+}
+function hideTip() { tip.classList.remove('show'); }
+
+function bindSvgHits(el, tipFn) {
+  el.querySelectorAll('.hit').forEach(h => {
+    const idx = parseInt(h.dataset.i, 10);
+    h.addEventListener('pointerenter', e => { showTip(tipFn(idx), e); });
+    h.addEventListener('pointermove', e => { showTip(tipFn(idx), e); });
+    h.addEventListener('pointerleave', () => { hideTip(); });
+  });
+}
+
+function calcScale(maxVal) {
+  if (maxVal <= 0) maxVal = 10;
+  const raw = maxVal / 4.2;
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const m = raw / p;
+  const n = [1, 2, 2.5, 5, 10].find(x => m <= x + 1e-9) || 10;
+  const step = n * p;
+  const top = Math.ceil(maxVal / step - 1e-9) * step;
+  return { top, step };
+}
+
+// Vertical Grouped SVG Bar Chart
+function renderSvgVGrouped(el, groups, series, opt) {
+  const W = Math.max(280, el.clientWidth || 540);
+  const H = opt.h || 290;
+  const m = { l: 48, r: 16, t: 26, b: 32 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const vmax = Math.max(...groups.flatMap(g => g.vals.filter(v => v != null)));
+  const { top, step } = calcScale(vmax * 1.05);
+  const y = v => m.t + ih - (v / top) * ih;
+  const gw = iw / groups.length;
+  const pad = Math.min(24, gw * 0.16);
+
+  let svg = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" role="img">`;
+  // Grids
+  for (let t = 0; t <= top + 1e-9; t += step) {
+    const yy = y(t);
+    svg += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${yy}" y2="${yy}" />`;
+    svg += `<text class="tick" x="${m.l - 8}" y="${yy + 4}" text-anchor="end">${(Math.round(t*10)/10).toLocaleString('th-TH')}</text>`;
+  }
+
+  groups.forEach((g, gi) => {
+    const validIndices = g.vals.map((v, i) => (v != null ? i : -1)).filter(i => i >= 0);
+    const gap = 3;
+    const bw = Math.min(36, (gw - 2 * pad - (validIndices.length - 1) * gap) / validIndices.length);
+    const totW = validIndices.length * bw + (validIndices.length - 1) * gap;
+    const x0 = m.l + gi * gw + (gw - totW) / 2;
+
+    svg += `<rect class="hit" data-i="${gi}" x="${m.l + gi * gw}" y="${m.t - 10}" width="${gw}" height="${ih + 10}" rx="6" />`;
+
+    validIndices.forEach((i, k) => {
+      const v = g.vals[i];
+      const bx = x0 + k * (bw + gap);
+      const by = y(v);
+      const bh = Math.max(1, m.t + ih - by);
+      const r = Math.min(4, bw / 2, bh);
+      svg += `<path d="M${bx},${m.t + ih} L${bx},${by + r} Q${bx},${by} ${bx + r},${by} L${bx + bw - r},${by} Q${bx + bw},${by} ${bx + bw},${by + r} L${bx + bw},${m.t + ih} Z" fill="${series[i].color}" />`;
+      if ((opt.showLabels || []).includes(i)) {
+        svg += `<text class="val" x="${bx + bw / 2}" y="${by - 6}" text-anchor="middle">${(Math.round(v*100)/100).toLocaleString('th-TH')}</text>`;
+      }
+    });
+    svg += `<text class="gl" x="${m.l + gi * gw + gw / 2}" y="${H - 10}" text-anchor="middle">${g.name}</text>`;
+  });
+
+  svg += `<line class="base" x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" />`;
+  svg += `</svg>`;
+  el.innerHTML = svg;
+  bindSvgHits(el, i => opt.tip(groups[i], series));
+}
+
+// Horizontal Grouped SVG Bar Chart
+function renderSvgHGrouped(el, cats, series, opt) {
+  const W = Math.max(280, el.clientWidth || 540);
+  const bh = 13, gap = 3, labH = 22, sp = 16, m = { l: 4, r: opt.rpad || 65 };
+  const rowH = labH + series.length * (bh + gap) - gap + sp;
+  const H = cats.length * rowH + 24;
+  const iw = W - m.l - m.r;
+  const vmax = Math.max(...cats.flatMap(c => c.vals));
+  const { top, step } = calcScale(vmax * 1.05);
+  const x = v => m.l + (v / top) * iw;
+
+  let svg = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" role="img">`;
+  for (let t = 0; t <= top + 1e-9; t += step) {
+    const xx = x(t);
+    svg += `<line class="grid" x1="${xx}" x2="${xx}" y1="0" y2="${H - 22}" />`;
+    svg += `<text class="tick" x="${xx}" y="${H - 6}" text-anchor="${t === 0 ? 'start' : 'middle'}">${(Math.round(t*10)/10).toLocaleString('th-TH')}</text>`;
+  }
+
+  cats.forEach((c, ci) => {
+    const y0 = ci * rowH;
+    svg += `<rect class="hit" data-i="${ci}" x="0" y="${y0 - 2}" width="${W}" height="${rowH - sp + 6}" rx="6" />`;
+    svg += `<text class="gl" x="${m.l + 2}" y="${y0 + 14}">${c.name}</text>`;
+
+    c.vals.forEach((v, i) => {
+      const yy = y0 + labH + i * (bh + gap);
+      const w = Math.max(1, x(v) - x(0));
+      const r = Math.min(4, bh / 2, w);
+      svg += `<path d="M${x(0)},${yy} L${x(0) + w - r},${yy} Q${x(0) + w},${yy} ${x(0) + w},${yy + r} L${x(0) + w},${yy + bh - r} Q${x(0) + w},${yy + bh} ${x(0) + w - r},${yy + bh} L${x(0)},${yy + bh} Z" fill="${series[i].color}" />`;
+      svg += `<text class="val" x="${x(0) + w + 6}" y="${yy + bh - 2}">${(Math.round(v*100)/100).toLocaleString('th-TH')}</text>`;
+    });
+  });
+
+  svg += `<line class="base" x1="${x(0)}" x2="${x(0)}" y1="0" y2="${H - 22}" />`;
+  svg += `</svg>`;
+  el.innerHTML = svg;
+  bindSvgHits(el, i => opt.tip(cats[i], series));
+}
+
+// -------------------------------------------------------------------
+// CORE DASHBOARD CHARTS
+// -------------------------------------------------------------------
+function charts() {
+  const s = D.scn[cur];
+  const y = D.y69, T = D.tot;
+  const yrs = ['2568 (ผลจริง)', '2569 (ผลจริง)', '2570 (ขอตั้ง ' + cur + ')'];
+  const inc = [y.income_total[1], T.income[1], s.income_total];
+  const exp = [y.exp_total[1], T.exp[1], s.exp_total];
+  const pr = [y.profit[1], T.profit[1], s.profit];
+
+  // 1. 3-Year Trend
+  const s1 = [
+    { name: 'รายได้', color: VIB_REV },
+    { name: 'ค่าใช้จ่าย', color: VIB_EXP },
+    { name: 'กำไรสุทธิ', color: VIB_PRO }
+  ];
+  const g1 = yrs.map((name, i) => ({
+    name,
+    vals: [m(inc[i]), m(exp[i]), m(pr[i])]
+  }));
+  renderSvgVGrouped(document.getElementById('chBox1'), g1, s1, {
+    showLabels: [0, 1, 2],
+    tip: (g, ser) => `<b>${g.name}</b>` + g.vals.map((v, i) => `<div class="tr"><span><i style="background:${ser[i].color}"></i>${ser[i].name}</span><em>${f(v * 1e6)} บ.</em></div>`).join('')
+  });
+
+  // 2. All Scenarios Comparison
+  const s2 = [
+    { name: 'รายได้', color: VIB_REV },
+    { name: 'ค่าใช้จ่าย', color: VIB_EXP },
+    { name: 'กำไรสุทธิ', color: VIB_PRO }
+  ];
+  const g2 = SC.map(k => ({
+    name: k,
+    vals: [m(D.scn[k].income_total), m(D.scn[k].exp_total), m(D.scn[k].profit)]
+  }));
+  renderSvgVGrouped(document.getElementById('chBox2'), g2, s2, {
+    showLabels: [2],
+    tip: (g, ser) => `<b>สถานการณ์: ${g.name}</b>` + g.vals.map((v, i) => `<div class="tr"><span><i style="background:${ser[i].color}"></i>${ser[i].name}</span><em>${f(v * 1e6)} บ.</em></div>`).join('')
+  });
+
+  // 3. Category Expenses
+  const s3 = [
+    { name: 'ผลจริงปี 68', color: '#94a3b8' },
+    { name: 'ผลจริงปี 69', color: '#f97316' },
+    { name: 'ขอตั้งปี 70 (' + cur + ')', color: VIB_EXP }
+  ];
+  const gl = T.groups.map(x => x[0].replace('ค่าใช้จ่ายเกี่ยวกับ', '').replace('ค่าใช้จ่าย', ''));
+  const cats3 = gl.map((name, i) => ({
+    name,
+    vals: [m(y.exp_groups[i] ? y.exp_groups[i][2] : 0), m(T.groups[i][2]), m(s.groups[i][1])]
+  }));
+  renderSvgHGrouped(document.getElementById('chBox3'), cats3, s3, {
+    rpad: 60,
+    tip: (c, ser) => `<b>หมวด: ${c.name}</b>` + c.vals.map((v, i) => `<div class="tr"><span><i style="background:${ser[i].color}"></i>${ser[i].name}</span><em>${f(v * 1e6)} บ.</em></div>`).join('')
+  });
+
+  // 4. Business Volume
+  const s4 = [
+    { name: 'ขอตั้งปี 69', color: '#cbd5e1' },
+    { name: 'ผลจริงปี 69', color: '#f59e0b' },
+    { name: 'ขอตั้งปี 70', color: VIB_PRO }
+  ];
+  const L = D.plan.loans;
+  const cats4 = L.map(x => ({
+    name: x[0],
+    vals: [m(x[1]), m(x[2]), m(x[3])]
+  }));
+  renderSvgHGrouped(document.getElementById('chBox4'), cats4, s4, {
+    rpad: 60,
+    tip: (c, ser) => `<b>${c.name}</b>` + c.vals.map((v, i) => `<div class="tr"><span><i style="background:${ser[i].color}"></i>${ser[i].name}</span><em>${f(v * 1e6)} บ.</em></div>`).join('')
+  });
+}
+
+// -------------------------------------------------------------------
+// MODULE: PLAN & 4-DIMENSIONAL COMPARISON (Requirements A2 & A3)
+// -------------------------------------------------------------------
+function setCompareDimension(dim) {
+  currentDimension = dim;
+  document.querySelectorAll('#dimSeg button').forEach(b => {
+    b.classList.toggle('on', b.dataset.dim === dim);
+  });
+  const descMap = {
+    overview: 'เปรียบเทียบรายได้รวม ค่าใช้จ่ายรวม และกำไรสุทธิ',
+    interest: 'เปรียบเทียบดอกเบี้ยรับเงินให้กู้ ดอกเบี้ยจ่ายเงินรับฝาก และรายได้ดอกเบี้ยสุทธิ (Net Margin)',
+    expense: 'เปรียบเทียบค่าใช้จ่าย 5 หมวดหลัก (ดอกเบี้ยจ่าย, เจ้าหน้าที่, อาคาร, สมาชิก, ดำเนินงาน)',
+    business: 'เปรียบเทียบการปล่อยเงินกู้ 3 ประเภท และยอดระดมทุน (เงินรับฝากเพิ่ม, ทุนเรือนหุ้นเพิ่ม)'
+  };
+  document.getElementById('dimSubDesc').innerText = descMap[dim] || '';
+  updateComparison();
+}
+
+function populateComparisonDropdowns() {
+  const selA = document.getElementById('cmpPlanA');
+  const selB = document.getElementById('cmpPlanB');
+  if (!selA || !selB) return;
+
+  const currentA = selA.value || 'ไม่ลดเลย';
+  const currentB = selB.value || 'ลด .25';
+
+  const baseOptions = [
+    { id: 'act69', name: 'ผลจริงปี 2569' },
+    { id: 'req69', name: 'แผนขอตั้งปี 2569' },
+    ...SC.map(k => ({ id: k, name: 'แผน 70 (' + k + ')' }))
+  ];
+
+  // For Plan B, add Live Simulator Option (Requirement A3)
+  const targetOptions = [
+    ...baseOptions,
+    { id: 'simLive', name: '★ ผลจำลองดอกเบี้ยสด (Live Simulator)' }
+  ];
+
+  selA.innerHTML = baseOptions.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+  selB.innerHTML = targetOptions.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+
+  selA.value = baseOptions.some(o => o.id === currentA) ? currentA : 'ไม่ลดเลย';
+  selB.value = targetOptions.some(o => o.id === currentB) ? currentB : 'ลด .25';
+}
+
+function setCmpPreset(planA, planB) {
+  const selA = document.getElementById('cmpPlanA');
+  const selB = document.getElementById('cmpPlanB');
+  selA.value = planA === 'none' ? 'ไม่ลดเลย' : (planA === 'act69' ? 'act69' : planA);
+  selB.value = planB === 'd25' ? 'ลด .25' : (planB === 'd20' ? 'ลด .20' : (planB === 'd1' ? 'ลด .10' : planB));
+  updateComparison();
+}
+
+function getPlanData(id) {
+  const T = D.tot, B = D.base;
+  if (id === 'act69') {
+    return {
+      name: 'ผลจริงปี 2569',
+      income_total: T.income[1],
+      exp_total: T.exp[1],
+      profit: T.profit[1],
+      loan_int: B.income_int[0][2],
+      dep_int: B.detail['ดอกเบี้ยจ่าย'] ? B.detail['ดอกเบี้ยจ่าย'][0][2] : 17743929,
+      groups: T.groups.map(g => [g[0], g[2]]),
+      loans: D.plan.loans.map(l => [l[0], l[2]]),
+      deposit_add: D.plan.deposit_add[1],
+      share_add: D.plan.share_add[1]
+    };
+  } else if (id === 'req69') {
+    return {
+      name: 'แผนขอตั้งปี 2569',
+      income_total: T.income[0],
+      exp_total: T.exp[0],
+      profit: T.profit[0],
+      loan_int: B.income_int[0][1],
+      dep_int: B.detail['ดอกเบี้ยจ่าย'] ? B.detail['ดอกเบี้ยจ่าย'][0][1] : 16700000,
+      groups: T.groups.map(g => [g[0], g[1]]),
+      loans: D.plan.loans.map(l => [l[0], l[1]]),
+      deposit_add: D.plan.deposit_add[0],
+      share_add: D.plan.share_add[0]
+    };
+  } else if (id === 'simLive') {
+    // Dynamic Simulator live data (Requirement A3)
+    const sim = calcSimValues();
+    return {
+      name: 'ผลจำลองดอกเบี้ยสด',
+      income_total: sim.newIncomeTotal,
+      exp_total: sim.newExpTotal,
+      profit: sim.newProfit,
+      loan_int: sim.newLoanInt,
+      dep_int: sim.newDepInt,
+      groups: [
+        ['ดอกเบี้ยจ่าย', sim.newIntExp],
+        ['เจ้าหน้าที่', D.scn['ไม่ลดเลย'].groups[1][1]],
+        ['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์', D.scn['ไม่ลดเลย'].groups[2][1]],
+        ['ค่าใช้จ่ายเกี่ยวกับสมาชิก', D.scn['ไม่ลดเลย'].groups[3][1]],
+        ['ค่าใช้จ่ายดำเนินงาน', D.scn['ไม่ลดเลย'].groups[4][1]]
+      ],
+      loans: D.plan.loans.map(l => [l[0], l[3]]),
+      deposit_add: D.plan.deposit_add[2],
+      share_add: D.plan.share_add[2]
+    };
+  } else {
+    // Standard Scenario
+    const s = D.scn[id] || D.scn['ไม่ลดเลย'];
+    return {
+      name: 'แผน 70 (' + id + ')',
+      income_total: s.income_total,
+      exp_total: s.exp_total,
+      profit: s.profit,
+      loan_int: s.loan_int,
+      dep_int: s.int_exp_dep || 20960000,
+      groups: s.groups.map(g => [g[0], g[1]]),
+      loans: D.plan.loans.map(l => [l[0], l[3]]),
+      deposit_add: D.plan.deposit_add[2],
+      share_add: D.plan.share_add[2]
+    };
+  }
+}
+
+function updateComparison() {
+  const idA = document.getElementById('cmpPlanA').value;
+  const idB = document.getElementById('cmpPlanB').value;
+  const pA = getPlanData(idA);
+  const pB = getPlanData(idB);
+
+  // Common Series
+  const cmpSeries = [
+    { name: pA.name, color: VIB_CMP_A },
+    { name: pB.name, color: VIB_CMP_B }
+  ];
+
+  let kpiCardsHtml = '';
+  let chartTitle = '';
+  let tHtml = `
+    <thead>
+      <tr>
+        <th>รายการ</th>
+        <th>${pA.name}</th>
+        <th>${pB.name}</th>
+        <th>ผลต่าง (บาท)</th>
+        <th>% ผลต่าง</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+
+  if (currentDimension === 'overview') {
+    // 1. Overview Dimension
+    chartTitle = `เปรียบเทียบภาพรวม: ${pA.name} VS ${pB.name}`;
+    const dRev = pB.income_total - pA.income_total;
+    const dExp = pB.exp_total - pA.exp_total;
+    const dPro = pB.profit - pA.profit;
+
+    kpiCardsHtml = `
+      <div class="cmp-kpi">
+        <div class="cmp-lbl">รายได้รวม</div>
+        <div class="cmp-val" style="color:var(--c-rev)">${f(pB.income_total)}</div>
+        <div class="cmp-delta">เทียบ ${pA.name}: ${dl(pB.income_total, pA.income_total, 0)}</div>
+      </div>
+      <div class="cmp-kpi">
+        <div class="cmp-lbl">ค่าใช้จ่ายรวม</div>
+        <div class="cmp-val" style="color:var(--c-exp)">${f(pB.exp_total)}</div>
+        <div class="cmp-delta">เทียบ ${pA.name}: ${dl(pB.exp_total, pA.exp_total, 1)}</div>
+      </div>
+      <div class="cmp-kpi" style="border-color:var(--c-pro)">
+        <div class="cmp-lbl" style="font-weight:600;color:var(--c-pro)">กำไรสุทธิ</div>
+        <div class="cmp-val" style="color:var(--c-pro)">${f(pB.profit)}</div>
+        <div class="cmp-delta">เทียบ ${pA.name}: ${dl(pB.profit, pA.profit, 0)}</div>
+      </div>
+    `;
+
+    const groups = [
+      { name: 'รายได้รวม', vals: [m(pA.income_total), m(pB.income_total)] },
+      { name: 'ค่าใช้จ่ายรวม', vals: [m(pA.exp_total), m(pB.exp_total)] },
+      { name: 'กำไรสุทธิ', vals: [m(pA.profit), m(pB.profit)] }
+    ];
+    renderSvgVGrouped(document.getElementById('cmpChartBox'), groups, cmpSeries, {
+      showLabels: [0, 1],
+      tip: (g, ser) => `<b>${g.name}</b>` + g.vals.map((v, i) => `<div class="tr"><span><i style="background:${ser[i].color}"></i>${ser[i].name}</span><em>${f(v * 1e6)} บ.</em></div>`).join('')
+    });
+
+    tHtml += `
+      <tr><td>รายได้รวมทั้งหมด</td><td>${f(pA.income_total)}</td><td>${f(pB.income_total)}</td><td class="${dRev>=0?'up':'dn'}">${dRev>=0?'+':''}${f(dRev)}</td><td class="${dRev>=0?'up':'dn'}">${pc(pB.income_total,pA.income_total).toFixed(2)}%</td></tr>
+      <tr><td>ค่าใช้จ่ายรวมทั้งหมด</td><td>${f(pA.exp_total)}</td><td>${f(pB.exp_total)}</td><td class="${dExp<=0?'up':'dn'}">${dExp>=0?'+':''}${f(dExp)}</td><td class="${dExp<=0?'up':'dn'}">${pc(pB.exp_total,pA.exp_total).toFixed(2)}%</td></tr>
+      <tr class="tot"><td>กำไรสุทธิ</td><td style="color:var(--c-pro)">${f(pA.profit)}</td><td style="color:var(--c-pro)">${f(pB.profit)}</td><td class="${dPro>=0?'up':'dn'}">${dPro>=0?'+':''}${f(dPro)}</td><td class="${dPro>=0?'up':'dn'}">${pc(pB.profit,pA.profit).toFixed(2)}%</td></tr>
+    `;
+
+  } else if (currentDimension === 'interest') {
+    // 2. Interest & NIM Dimension
+    chartTitle = `เปรียบเทียบโครงสร้างดอกเบี้ย: ${pA.name} VS ${pB.name}`;
+    const dLoan = pB.loan_int - pA.loan_int;
+    const dDep = pB.dep_int - pA.dep_int;
+    const netA = pA.loan_int - pA.dep_int;
+    const netB = pB.loan_int - pB.dep_int;
+    const dNet = netB - netA;
+
+    kpiCardsHtml = `
+      <div class="cmp-kpi">
+        <div class="cmp-lbl">ดอกเบี้ยรับเงินให้กู้</div>
+        <div class="cmp-val" style="color:var(--c-rev)">${f(pB.loan_int)}</div>
+        <div class="cmp-delta">${dl(pB.loan_int, pA.loan_int, 0)}</div>
+      </div>
+      <div class="cmp-kpi">
+        <div class="cmp-lbl">ดอกเบี้ยจ่ายเงินรับฝาก</div>
+        <div class="cmp-val" style="color:var(--c-exp)">${f(pB.dep_int)}</div>
+        <div class="cmp-delta">${dl(pB.dep_int, pA.dep_int, 1)}</div>
+      </div>
+      <div class="cmp-kpi" style="border-color:var(--c-int)">
+        <div class="cmp-lbl" style="font-weight:600;color:var(--c-int)">รายได้ดอกเบี้ยสุทธิ (Net Margin)</div>
+        <div class="cmp-val" style="color:var(--c-int)">${f(netB)}</div>
+        <div class="cmp-delta">เทียบ ${pA.name}: ${dl(netB, netA, 0)}</div>
+      </div>
+    `;
+
+    const groups = [
+      { name: 'ดอกเบี้ยรับเงินกู้', vals: [m(pA.loan_int), m(pB.loan_int)] },
+      { name: 'ดอกเบี้ยจ่ายเงินฝาก', vals: [m(pA.dep_int), m(pB.dep_int)] },
+      { name: 'ดอกเบี้ยสุทธิ (Margin)', vals: [m(netA), m(netB)] }
+    ];
+    renderSvgVGrouped(document.getElementById('cmpChartBox'), groups, cmpSeries, {
+      showLabels: [0, 1],
+      tip: (g, ser) => `<b>${g.name}</b>` + g.vals.map((v, i) => `<div class="tr"><span><i style="background:${ser[i].color}"></i>${ser[i].name}</span><em>${f(v * 1e6)} บ.</em></div>`).join('')
+    });
+
+    tHtml += `
+      <tr><td>ดอกเบี้ยรับจากเงินให้กู้</td><td>${f(pA.loan_int)}</td><td>${f(pB.loan_int)}</td><td class="${dLoan>=0?'up':'dn'}">${dLoan>=0?'+':''}${f(dLoan)}</td><td class="${dLoan>=0?'up':'dn'}">${pc(pB.loan_int,pA.loan_int).toFixed(2)}%</td></tr>
+      <tr><td>ดอกเบี้ยจ่ายเงินรับฝาก</td><td>${f(pA.dep_int)}</td><td>${f(pB.dep_int)}</td><td class="${dDep<=0?'up':'dn'}">${dDep>=0?'+':''}${f(dDep)}</td><td class="${dDep<=0?'up':'dn'}">${pc(pB.dep_int,pA.dep_int).toFixed(2)}%</td></tr>
+      <tr class="tot"><td>รายได้ดอกเบี้ยสุทธิ (Net Interest Margin)</td><td style="color:var(--c-int)">${f(netA)}</td><td style="color:var(--c-int)">${f(netB)}</td><td class="${dNet>=0?'up':'dn'}">${dNet>=0?'+':''}${f(dNet)}</td><td class="${dNet>=0?'up':'dn'}">${pc(netB,netA).toFixed(2)}%</td></tr>
+    `;
+
+  } else if (currentDimension === 'expense') {
+    // 3. Expense Categories Dimension
+    chartTitle = `เปรียบเทียบค่าใช้จ่าย 5 หมวด: ${pA.name} VS ${pB.name}`;
+    kpiCardsHtml = pA.groups.map((g, idx) => {
+      const vA = g[1];
+      const vB = pB.groups[idx] ? pB.groups[idx][1] : vA;
+      return `
+        <div class="cmp-kpi">
+          <div class="cmp-lbl">${g[0]}</div>
+          <div class="cmp-val">${f(vB)}</div>
+          <div class="cmp-delta">${dl(vB, vA, 1)}</div>
+        </div>
+      `;
+    }).join('');
+
+    const cats = pA.groups.map((g, idx) => ({
+      name: g[0].replace('ค่าใช้จ่ายเกี่ยวกับ', '').replace('ค่าใช้จ่าย', ''),
+      vals: [m(g[1]), m(pB.groups[idx] ? pB.groups[idx][1] : g[1])]
+    }));
+    renderSvgHGrouped(document.getElementById('cmpChartBox'), cats, cmpSeries, {
+      rpad: 65,
+      tip: (c, ser) => `<b>หมวด: ${c.name}</b>` + c.vals.map((v, i) => `<div class="tr"><span><i style="background:${ser[i].color}"></i>${ser[i].name}</span><em>${f(v * 1e6)} บ.</em></div>`).join('')
+    });
+
+    pA.groups.forEach((g, idx) => {
+      const vA = g[1];
+      const vB = pB.groups[idx] ? pB.groups[idx][1] : vA;
+      const d = vB - vA;
+      tHtml += `<tr><td>${g[0]}</td><td>${f(vA)}</td><td>${f(vB)}</td><td class="${d<=0?'up':'dn'}">${d>=0?'+':''}${f(d)}</td><td class="${d<=0?'up':'dn'}">${pc(vB,vA).toFixed(2)}%</td></tr>`;
+    });
+    const dExpTot = pB.exp_total - pA.exp_total;
+    tHtml += `<tr class="tot"><td>รวมค่าใช้จ่ายทั้งสิ้น</td><td>${f(pA.exp_total)}</td><td>${f(pB.exp_total)}</td><td class="${dExpTot<=0?'up':'dn'}">${dExpTot>=0?'+':''}${f(dExpTot)}</td><td class="${dExpTot<=0?'up':'dn'}">${pc(pB.exp_total,pA.exp_total).toFixed(2)}%</td></tr>`;
+
+  } else if (currentDimension === 'business') {
+    // 4. Business Volume Dimension
+    chartTitle = `เปรียบเทียบแผนธุรกิจและสินเชื่อ: ${pA.name} VS ${pB.name}`;
+    kpiCardsHtml = `
+      <div class="cmp-kpi">
+        <div class="cmp-lbl">เงินกู้สามัญ</div>
+        <div class="cmp-val">${f(pB.loans[2][1])}</div>
+        <div class="cmp-delta">${dl(pB.loans[2][1], pA.loans[2][1], 0)}</div>
+      </div>
+      <div class="cmp-kpi">
+        <div class="cmp-lbl">เงินกู้ฉุกเฉิน</div>
+        <div class="cmp-val">${f(pB.loans[1][1])}</div>
+        <div class="cmp-delta">${dl(pB.loans[1][1], pA.loans[1][1], 0)}</div>
+      </div>
+      <div class="cmp-kpi">
+        <div class="cmp-lbl">เงินรับฝากเพิ่ม</div>
+        <div class="cmp-val">${f(pB.deposit_add)}</div>
+        <div class="cmp-delta">${dl(pB.deposit_add, pA.deposit_add, 0)}</div>
+      </div>
+    `;
+
+    const cats = [
+      ...pA.loans.map((l, idx) => ({ name: l[0], vals: [m(l[1]), m(pB.loans[idx][1])] })),
+      { name: 'เงินรับฝากเพิ่ม', vals: [m(pA.deposit_add), m(pB.deposit_add)] },
+      { name: 'ทุนเรือนหุ้นเพิ่ม', vals: [m(pA.share_add), m(pB.share_add)] }
+    ];
+    renderSvgHGrouped(document.getElementById('cmpChartBox'), cats, cmpSeries, {
+      rpad: 65,
+      tip: (c, ser) => `<b>${c.name}</b>` + c.vals.map((v, i) => `<div class="tr"><span><i style="background:${ser[i].color}"></i>${ser[i].name}</span><em>${f(v * 1e6)} บ.</em></div>`).join('')
+    });
+
+    pA.loans.forEach((l, idx) => {
+      const vA = l[1], vB = pB.loans[idx][1], d = vB - vA;
+      tHtml += `<tr><td>${l[0]}</td><td>${f(vA)}</td><td>${f(vB)}</td><td class="${d>=0?'up':'dn'}">${d>=0?'+':''}${f(d)}</td><td class="${d>=0?'up':'dn'}">${pc(vB,vA).toFixed(2)}%</td></tr>`;
+    });
+    const dDepAdd = pB.deposit_add - pA.deposit_add;
+    tHtml += `<tr><td>เงินรับฝากเพิ่มขึ้น</td><td>${f(pA.deposit_add)}</td><td>${f(pB.deposit_add)}</td><td class="${dDepAdd>=0?'up':'dn'}">${dDepAdd>=0?'+':''}${f(dDepAdd)}</td><td class="${dDepAdd>=0?'up':'dn'}">${pc(pB.deposit_add,pA.deposit_add).toFixed(2)}%</td></tr>`;
+    const dShare = pB.share_add - pA.share_add;
+    tHtml += `<tr><td>ทุนเรือนหุ้นเพิ่มขึ้น</td><td>${f(pA.share_add)}</td><td>${f(pB.share_add)}</td><td class="${dShare>=0?'up':'dn'}">${dShare>=0?'+':''}${f(dShare)}</td><td class="${dShare>=0?'up':'dn'}">${pc(pB.share_add,pA.share_add).toFixed(2)}%</td></tr>`;
+  }
+
+  document.getElementById('cmpChartTitle').innerText = chartTitle;
+  document.getElementById('cmpKpis').innerHTML = kpiCardsHtml;
+  tHtml += `</tbody>`;
+  document.getElementById('tCmpDetail').innerHTML = tHtml;
+}
+
+// -------------------------------------------------------------------
+// MODULE: KPI & TABLES
+// -------------------------------------------------------------------
+function kpi() {
+  const s = D.scn[cur], T = D.tot;
+  const items = [
+    ['รายได้รวม', s.income_total, T.income[1], 0, 'rev', VIB_REV],
+    ['ค่าใช้จ่ายรวม', s.exp_total, T.exp[1], 1, 'exp', VIB_EXP],
+    ['กำไรสุทธิ', s.profit, T.profit[1], 0, 'pro', VIB_PRO],
+    ['ดอกเบี้ยจ่าย', s.int_exp, T.groups[0][2], 1, 'int', VIB_INT]
+  ];
+  document.getElementById('kpis').innerHTML = items.map(([l, v, a, inv, cls, col]) => `
+    <div class="kpi-card ${cls}">
+      <div class="kl" style="color:${col}">${l} · ขอตั้งปี 70 (${cur})</div>
+      <div class="kv" style="color:${col}">${f(v)}</div>
+      <div class="kd">เทียบผลจริงปี 69: ${dl(v, a, inv)}</div>
+    </div>
+  `).join('');
+}
+
+const row = (a, cls) => `<tr class="${cls || ''}">${a.map(x => `<td>${x}</td>`).join('')}</tr>`;
+const head = a => `<tr>${a.map(x => `<th>${x}</th>`).join('')}</tr>`;
+
+function renderEditBtn(type, cat, idx) {
+  if (!isEditMode) return '';
+  return `
+    <span class="edit-actions">
+      <button class="btn btn-sm btn-icon" onclick="openEditModal('${type}','${cat}',${idx})" title="แก้ไข">✎</button>
+      <button class="btn btn-sm btn-icon btn-danger" onclick="deleteItem('${type}','${cat}',${idx})" title="ลบ">✕</button>
+    </span>
+  `;
+}
+
+function tables() {
+  const s = D.scn[cur], p = D.plan, B = D.base, T = D.tot;
+
+  // Business plan
+  document.getElementById('biz').innerHTML = head(['รายการ', 'ขอตั้ง 69', 'จริง 69', 'ขอตั้ง 70']) +
+    row(['สมาชิกใหม่ (คน)', ...p.members.map(f)]) +
+    row(['ทุนเรือนหุ้นเพิ่ม', ...p.share_add.map(f)]) +
+    row(['เงินรับฝากเพิ่ม', ...p.deposit_add.map(f)]) +
+    row(['รวมจ่ายเงินกู้', ...p.loan_total.map(f)], 'tot');
+
+  // Scenario Table
+  document.getElementById('tscn').innerHTML = head(['สถานการณ์', 'ดอกเบี้ยรับเงินกู้', 'รายได้รวม', 'ดอกเบี้ยจ่าย', 'ค่าใช้จ่ายรวม', 'กำไรสุทธิ', 'กำไรเทียบจริง 69']) +
+    SC.map(k => {
+      const x = D.scn[k];
+      return row([
+        k + (k === cur ? ' ●' : '') + (customScenarios.includes(k) ? ` <span class="seg-del" onclick="deleteScenario('${k}')" title="ลบสถานการณ์นี้">✕</span>` : ''),
+        f(x.loan_int),
+        f(x.income_total),
+        f(x.int_exp),
+        f(x.exp_total),
+        f(x.profit),
+        dl(x.profit, T.profit[1], 0)
+      ], k === cur ? 'sel' : '');
+    }).join('');
+
+  const best = SC.reduce((a, k) => D.scn[k].profit > D.scn[a].profit ? k : a, SC[0]);
+  document.getElementById('sv').innerHTML = `กำไรสูงสุดในบรรดาสถานการณ์: <b>${best}</b> (${f(D.scn[best].profit)} บาท) · ดอกเบี้ยจ่ายเงินรับฝากตาม sheet “ลด .25”: ลดดอกเบี้ย ${f(p.dep_int_cut_total)} vs ไม่ลด ${f(p.dep_int_nocut_total)} (ประหยัดดอกเบี้ยได้ ${f(p.dep_int_nocut_total - p.dep_int_cut_total)} บาท)`;
+
+  // Income Table
+  const inl = B.income_int.map((r, i) => i === 0 ? [r[0], r[1], r[2], s.loan_int] : r);
+  const non = B.income_non;
+  const sm = a => [0, 1, 2].map(i => a.reduce((t, r) => t + Number(r[i + 1]||0), 0));
+  const it = sm(inl), nt = sm(non);
+
+  let incHtml = head(['รายการ', 'ขอตั้ง 69', 'จริง 69', 'ขอตั้ง 70', 'เปลี่ยนแปลง']);
+  incHtml += inl.map((r, i) => row([
+    r[0] + (i === 0 ? ` <span style="font-size:11px;color:var(--mu)">(ตาม ${cur})</span>` : renderEditBtn('income', 'ดอกเบี้ยรับ', i)),
+    f(r[1]), f(r[2]), f(r[3]), dl(r[3], r[2], 0)
+  ], isEditMode ? 'editable' : '')).join('');
+  incHtml += row(['รวมรายได้ดอกเบี้ย', f(it[0]), f(it[1]), f(it[2]), dl(it[2], it[1], 0)], 'tot');
+
+  incHtml += non.map((r, i) => row([
+    r[0] + renderEditBtn('income', 'รายได้อื่น', i),
+    f(r[1]), f(r[2]), f(r[3]), dl(r[3], r[2], 0)
+  ], isEditMode ? 'editable' : '')).join('');
+  incHtml += row(['รวมรายได้ที่มิใช่ดอกเบี้ย', f(nt[0]), f(nt[1]), f(nt[2]), dl(nt[2], nt[1], 0)], 'tot');
+  incHtml += row(['รวมรายได้ก่อนหักค่าใช้จ่าย', f(it[0] + nt[0]), f(it[1] + nt[1]), f(it[2] + nt[2]), dl(it[2] + nt[2], it[1] + nt[1], 0)], 'tot');
+  document.getElementById('tinc').innerHTML = incHtml;
+
+  // Expenses Table
+  const gs = Object.keys(B.detail);
+  const sel = document.getElementById('gsel');
+  const oldVal = sel.value;
+  sel.innerHTML = ['ทั้งหมด', ...gs].map(x => `<option value="${x}">${x}</option>`).join('');
+  if (oldVal && ['ทั้งหมด', ...gs].includes(oldVal)) sel.value = oldVal;
+  sel.onchange = () => { gsel = sel.value; tables(); };
+
+  let expHtml = head(['รายการ', 'ขอตั้ง 69', 'จริง 69', 'ขอตั้ง 70', 'เปลี่ยนแปลง']);
+  gs.filter(x => gsel === 'ทั้งหมด' || x === gsel).forEach(g => {
+    const it = B.detail[g].map(r => {
+      r = r.slice();
+      if (r[0] === 'ดอกเบี้ยจ่ายเงินรับฝาก') r[3] = s.int_exp_dep;
+      if (r[0] === 'ดอกเบี้ยจ่ายเงินกู้') r[3] = s.int_exp_loan || 750000;
+      return r;
+    });
+    const t = sm(it);
+    expHtml += row([g, f(t[0]), f(t[1]), f(t[2]), dl(t[2], t[1], 1)], 'cat');
+    expHtml += it.map((r, idx) => row([
+      r[0] + (g === 'ดอกเบี้ยจ่าย' && idx < 2 ? ` <span style="font-size:11px;color:var(--mu)">(สถานการณ์)</span>` : renderEditBtn('expense', g, idx)),
+      f(r[1]), f(r[2]), f(r[3]), dl(r[3], r[2], 1)
+    ], isEditMode ? 'editable' : '')).join('');
+  });
+  expHtml += row(['รวมค่าใช้จ่ายทั้งสิ้น (ตามแผน)', f(T.exp[0]), f(T.exp[1]), f(s.exp_total), dl(s.exp_total, T.exp[1], 1)], 'tot');
+  document.getElementById('texp').innerHTML = expHtml;
+
+  // Capex Table
+  if (B.capex) {
+    document.getElementById('tcap').innerHTML = head(['รายการ', 'ขอตั้ง 69', 'จริง 69', 'ขอตั้ง 70']) +
+      B.capex.map((r, i) => row([
+        r[0] + renderEditBtn('capex', 'capex', i),
+        f(r[1]), f(r[2]), f(r[3])
+      ], isEditMode ? 'editable' : '')).join('') +
+      row(['รวม', ...B.capex_total.map(f)], 'tot');
+  }
+}
+
+// Scenario button bar
+function seg() {
+  const e = document.getElementById('scSeg');
+  e.innerHTML = SC.map(k => {
+    const isCustom = customScenarios.includes(k);
+    return `<button class="${k === cur ? 'on' : ''}" data-k="${k}">
+      ${k}
+      ${isCustom ? `<span class="seg-del" onclick="event.stopPropagation();deleteScenario('${k}')" title="ลบสถานการณ์นี้">✕</span>` : ''}
+    </button>`;
+  }).join('');
+  e.querySelectorAll('button').forEach(b => b.onclick = (ev) => {
+    if (ev.target.classList.contains('seg-del')) return;
+    cur = b.dataset.k;
+    render();
+  });
+}
+
+function render() {
+  seg();
+  kpi();
+  charts();
+  tables();
+  populateComparisonDropdowns();
+  updateComparison();
+  updateSimResults();
+}
+
+// -------------------------------------------------------------------
+// MODULE: WHAT-IF INTEREST RATE SIMULATOR (Live Integration)
+// -------------------------------------------------------------------
+let simLoanCut = -0.25;
+let simDepCut = -0.20;
+const SIM_LOAN_BASE = 830000000;
+const SIM_DEP_BASE = 205000000;
+
+function onSimChange(type, val) {
+  if (type === 'loan') {
+    simLoanCut = parseFloat(val);
+    document.getElementById('simLoanVal').innerText = (simLoanCut >= 0 ? '+' : '') + simLoanCut.toFixed(2) + '%';
+  } else {
+    simDepCut = parseFloat(val);
+    document.getElementById('simDepVal').innerText = (simDepCut >= 0 ? '+' : '') + simDepCut.toFixed(2) + '%';
+  }
+  updateSimResults();
+  // Auto update comparison if Plan B is live simulator (Requirement A3)
+  if (document.getElementById('cmpPlanB') && document.getElementById('cmpPlanB').value === 'simLive') {
+    updateComparison();
+  }
+}
+
+function setSimPreset(type, val) {
+  if (type === 'loan') {
+    document.getElementById('simLoanRange').value = val;
+    onSimChange('loan', val);
+  } else {
+    document.getElementById('simDepRange').value = val;
+    onSimChange('dep', val);
+  }
+}
+
+function resetSim() {
+  setSimPreset('loan', 0);
+  setSimPreset('dep', 0);
+  showToast('รีเซ็ตแบบจำลองดอกเบี้ยเป็น 0.00%');
+}
+
+function calcSimValues() {
+  const baseScn = D.scn['ไม่ลดเลย'] || Object.values(D.scn)[0];
+  const baseLoanInt = 106045000;
+  const baseDepInt = 20960000;
+
+  const loanDelta = SIM_LOAN_BASE * (simLoanCut / 100);
+  const depDelta = SIM_DEP_BASE * (simDepCut / 100);
+
+  const newLoanInt = baseLoanInt + loanDelta;
+  const newDepInt = baseDepInt + depDelta;
+
+  const otherInt70 = D.base.income_int.slice(1).reduce((t, r) => t + Number(r[3]||0), 0);
+  const otherInc70 = D.base.income_non.reduce((t, r) => t + Number(r[3]||0), 0);
+  const newIncomeTotal = newLoanInt + otherInt70 + otherInc70;
+
+  let otherExp70 = 0;
+  for (const g in D.base.detail) {
+    if (g !== 'ดอกเบี้ยจ่าย') {
+      otherExp70 += D.base.detail[g].reduce((t, r) => t + Number(r[3]||0), 0);
+    }
+  }
+  const newIntExp = newDepInt + 750000;
+  const newExpTotal = newIntExp + otherExp70;
+  const newProfit = newIncomeTotal - newExpTotal;
+  const netInterest = newLoanInt - newDepInt;
+
+  return {
+    newLoanInt, loanDelta,
+    newDepInt, depDelta,
+    newIncomeTotal, newIntExp, newExpTotal,
+    newProfit, netInterest
+  };
+}
+
+function updateSimResults() {
+  const res = calcSimValues();
+  document.getElementById('simResLoan').innerText = f(res.newLoanInt) + ' บ.';
+  document.getElementById('simDeltaLoan').innerHTML = dl(res.newLoanInt, 106045000, 0);
+
+  document.getElementById('simResDep').innerText = f(res.newDepInt) + ' บ.';
+  document.getElementById('simDeltaDep').innerHTML = dl(res.newDepInt, 20960000, 1);
+
+  document.getElementById('simResNetInt').innerText = f(res.netInterest) + ' บ.';
+  document.getElementById('simDeltaNetInt').innerText = 'ส่วนต่างสุทธิ: ' + f(res.netInterest - (106045000 - 20960000)) + ' บ.';
+
+  document.getElementById('simResProfit').innerText = f(res.newProfit) + ' บ.';
+  document.getElementById('simDeltaProfit').innerHTML = `เทียบจริง 69: ${dl(res.newProfit, D.tot.profit[1], 0)}`;
+}
+
+function applySimLive() {
+  const res = calcSimValues();
+  const liveKey = 'สถานการณ์จำลอง (สด)';
+  D.scn[liveKey] = {
+    loan_int: res.newLoanInt,
+    income_int_total: res.newLoanInt + D.base.income_int.slice(1).reduce((t, r) => t + Number(r[3]||0), 0),
+    income_total: res.newIncomeTotal,
+    exp_total: res.newExpTotal,
+    int_exp: res.newIntExp,
+    int_exp_dep: res.newDepInt,
+    int_exp_loan: 750000,
+    profit: res.newProfit,
+    groups: [
+      ['ดอกเบี้ยจ่าย', res.newIntExp],
+      ['เจ้าหน้าที่', D.scn['ไม่ลดเลย'].groups[1][1]],
+      ['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์', D.scn['ไม่ลดเลย'].groups[2][1]],
+      ['ค่าใช้จ่ายเกี่ยวกับสมาชิก', D.scn['ไม่ลดเลย'].groups[3][1]],
+      ['ค่าใช้จ่ายดำเนินงาน', D.scn['ไม่ลดเลย'].groups[4][1]]
+    ]
+  };
+
+  if (!SC.includes(liveKey)) {
+    SC.push(liveKey);
+    if (!customScenarios.includes(liveKey)) customScenarios.push(liveKey);
+  }
+  cur = liveKey;
+  recalcAll();
+  render();
+  showToast('สลับมาดูผลลัพธ์จำลองในแดชบอร์ดแล้ว');
+}
+
+function openSaveScenarioModal() {
+  const res = calcSimValues();
+  document.getElementById('scName').value = `จำลอง: กู้ ${simLoanCut >= 0 ? '+' : ''}${simLoanCut.toFixed(2)}% ฝาก ${simDepCut >= 0 ? '+' : ''}${simDepCut.toFixed(2)}%`;
+  document.getElementById('scDescLoan').innerText = `${simLoanCut >= 0 ? '+' : ''}${simLoanCut.toFixed(2)}% (ดอกเบี้ยรับ ${f(res.newLoanInt)} บาท)`;
+  document.getElementById('scDescDep').innerText = `${simDepCut >= 0 ? '+' : ''}${simDepCut.toFixed(2)}% (ดอกเบี้ยจ่าย ${f(res.newDepInt)} บาท)`;
+  document.getElementById('scDescProfit').innerText = `${f(res.newProfit)} บาท (${dl(res.newProfit, D.tot.profit[1], 0).replace(/<[^>]+>/g, '')})`;
+  document.getElementById('scenarioModal').classList.add('active');
+}
+
+function closeScenarioModal() {
+  document.getElementById('scenarioModal').classList.remove('active');
+}
+
+function handleSaveScenarioSubmit(ev) {
+  ev.preventDefault();
+  const name = document.getElementById('scName').value.trim();
+  if (!name) return;
+
+  const res = calcSimValues();
+  D.scn[name] = {
+    loan_int: res.newLoanInt,
+    income_int_total: res.newLoanInt + D.base.income_int.slice(1).reduce((t, r) => t + Number(r[3]||0), 0),
+    income_total: res.newIncomeTotal,
+    exp_total: res.newExpTotal,
+    int_exp: res.newIntExp,
+    int_exp_dep: res.newDepInt,
+    int_exp_loan: 750000,
+    profit: res.newProfit,
+    groups: [
+      ['ดอกเบี้ยจ่าย', res.newIntExp],
+      ['เจ้าหน้าที่', D.scn['ไม่ลดเลย'].groups[1][1]],
+      ['ค่าใช้จ่ายเกี่ยวกับอาคารสถานที่และอุปกรณ์', D.scn['ไม่ลดเลย'].groups[2][1]],
+      ['ค่าใช้จ่ายเกี่ยวกับสมาชิก', D.scn['ไม่ลดเลย'].groups[3][1]],
+      ['ค่าใช้จ่ายดำเนินงาน', D.scn['ไม่ลดเลย'].groups[4][1]]
+    ]
+  };
+
+  if (!SC.includes(name)) SC.push(name);
+  if (!customScenarios.includes(name)) customScenarios.push(name);
+
+  cur = name;
+  closeScenarioModal();
+  recalcAll();
+  saveToStorage();
+  render();
+  showToast(`บันทึกสถานการณ์ "${name}" เรียบร้อยแล้ว`);
+}
+
+function deleteScenario(name) {
+  if (confirm(`คุณต้องการลบสถานการณ์จำลอง "${name}" ใช่หรือไม่?`)) {
+    delete D.scn[name];
+    SC = SC.filter(k => k !== name);
+    customScenarios = customScenarios.filter(k => k !== name);
+    if (cur === name) cur = SC[0];
+    recalcAll();
+    saveToStorage();
+    render();
+    showToast(`ลบสถานการณ์ "${name}" แล้ว`);
+  }
+}
+
+// -------------------------------------------------------------------
+// MODULE: EDIT MODE & MODALS
+// -------------------------------------------------------------------
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  const btn = document.getElementById('btnEditToggle');
+  const ind = document.getElementById('editModeIndicator');
+  const incAdd = document.getElementById('incAddBtn');
+  const expAdd = document.getElementById('expAddBtn');
+  const capAdd = document.getElementById('capAddBtn');
+
+  if (isEditMode) {
+    btn.classList.add('btn-primary');
+    btn.innerHTML = '✓ เสร็จสิ้นการแก้ไข';
+    ind.style.display = 'block';
+    incAdd.style.display = 'inline-flex';
+    expAdd.style.display = 'inline-flex';
+    capAdd.style.display = 'inline-flex';
+    showToast('เข้าสู่โหมดแก้ไขข้อมูล สามารถกด ✎ เพื่อแก้ไข หรือ ➕ เพื่อเพิ่มรายการได้');
+  } else {
+    btn.classList.remove('btn-primary');
+    btn.innerHTML = '✏️ โหมดแก้ไขข้อมูล';
+    ind.style.display = 'none';
+    incAdd.style.display = 'none';
+    expAdd.style.display = 'none';
+    capAdd.style.display = 'none';
+    showToast('ปิดโหมดแก้ไขข้อมูลแล้ว');
+  }
+  tables();
+}
+
+function openAddModal(type, defaultCat) {
+  document.getElementById('modalTitle').innerText = type === 'income' ? '➕ เพิ่มรายการรายได้ใหม่' : (type === 'capex' ? '➕ เพิ่มรายการครุภัณฑ์' : '➕ เพิ่มรายการค่าใช้จ่ายใหม่');
+  document.getElementById('fType').value = type;
+  document.getElementById('fIdx').value = -1;
+  document.getElementById('fName').value = '';
+  document.getElementById('fReq69').value = '';
+  document.getElementById('fAct69').value = '';
+  document.getElementById('fReq70').value = '';
+
+  const catGrp = document.getElementById('grpCatSelect');
+  const catSel = document.getElementById('fCatSelect');
+  if (type === 'income') {
+    catGrp.style.display = 'block';
+    catSel.innerHTML = '<option value="ดอกเบี้ยรับ">ดอกเบี้ยรับ</option><option value="รายได้อื่น">รายได้อื่น</option>';
+    if (defaultCat) catSel.value = defaultCat;
+  } else if (type === 'expense') {
+    catGrp.style.display = 'block';
+    const cats = Object.keys(D.base.detail);
+    catSel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    if (gsel !== 'ทั้งหมด') catSel.value = gsel;
+  } else {
+    catGrp.style.display = 'none';
+  }
+  document.getElementById('editModal').classList.add('active');
+}
+
+function openEditModal(type, cat, idx) {
+  document.getElementById('modalTitle').innerText = '✎ แก้ไขรายการ';
+  document.getElementById('fType').value = type;
+  document.getElementById('fCat').value = cat;
+  document.getElementById('fIdx').value = idx;
+
+  let item;
+  if (type === 'income') {
+    item = cat === 'ดอกเบี้ยรับ' ? D.base.income_int[idx] : D.base.income_non[idx];
+  } else if (type === 'expense') {
+    item = D.base.detail[cat][idx];
+  } else if (type === 'capex') {
+    item = D.base.capex[idx];
+  }
+  if (!item) return;
+
+  document.getElementById('grpCatSelect').style.display = 'none';
+  document.getElementById('fName').value = item[0];
+  document.getElementById('fReq69').value = item[1];
+  document.getElementById('fAct69').value = item[2];
+  document.getElementById('fReq70').value = item[3];
+  document.getElementById('editModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('editModal').classList.remove('active');
+}
+
+function handleModalSubmit(ev) {
+  ev.preventDefault();
+  const type = document.getElementById('fType').value;
+  const idx = parseInt(document.getElementById('fIdx').value, 10);
+  const name = document.getElementById('fName').value.trim();
+  const req69 = parseFloat(document.getElementById('fReq69').value) || 0;
+  const act69 = parseFloat(document.getElementById('fAct69').value) || 0;
+  const req70 = parseFloat(document.getElementById('fReq70').value) || 0;
+
+  if (idx === -1) {
+    const cat = document.getElementById('fCatSelect').value;
+    const newItem = [name, req69, act69, req70];
+    if (type === 'income') {
+      if (cat === 'ดอกเบี้ยรับ') D.base.income_int.push(newItem);
+      else D.base.income_non.push(newItem);
+    } else if (type === 'expense') {
+      if (!D.base.detail[cat]) D.base.detail[cat] = [];
+      D.base.detail[cat].push(newItem);
+    } else if (type === 'capex') {
+      if (!D.base.capex) D.base.capex = [];
+      D.base.capex.push(newItem);
+    }
+    showToast('เพิ่มรายการ "' + name + '" เรียบร้อย');
+  } else {
+    const cat = document.getElementById('fCat').value;
+    if (type === 'income') {
+      const arr = cat === 'ดอกเบี้ยรับ' ? D.base.income_int : D.base.income_non;
+      arr[idx] = [name, req69, act69, req70];
+    } else if (type === 'expense') {
+      D.base.detail[cat][idx] = [name, req69, act69, req70];
+    } else if (type === 'capex') {
+      D.base.capex[idx] = [name, req69, act69, req70];
+    }
+    showToast('แก้ไขข้อมูล "' + name + '" เรียบร้อย');
+  }
+
+  closeModal();
+  recalcAll();
+  saveToStorage();
+  render();
+}
+
+function deleteItem(type, cat, idx) {
+  let name = '';
+  if (type === 'income') {
+    name = (cat === 'ดอกเบี้ยรับ' ? D.base.income_int[idx] : D.base.income_non[idx])[0];
+  } else if (type === 'expense') {
+    name = D.base.detail[cat][idx][0];
+  } else if (type === 'capex') {
+    name = D.base.capex[idx][0];
+  }
+
+  if (confirm(`คุณต้องการลบรายการ "${name}" ใช่หรือไม่?`)) {
+    if (type === 'income') {
+      if (cat === 'ดอกเบี้ยรับ') D.base.income_int.splice(idx, 1);
+      else D.base.income_non.splice(idx, 1);
+    } else if (type === 'expense') {
+      D.base.detail[cat].splice(idx, 1);
+    } else if (type === 'capex') {
+      D.base.capex.splice(idx, 1);
+    }
+    showToast(`ลบรายการ "${name}" แล้ว`);
+    recalcAll();
+    saveToStorage();
+    render();
+  }
+}
+
+function scrollToEl(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.style.borderColor = 'var(--c-pro)';
+    setTimeout(() => { el.style.borderColor = ''; }, 1800);
+  }
+}
+
+// -------------------------------------------------------------------
+// EXPORT / IMPORT DATA
+// -------------------------------------------------------------------
+function exportData() {
+  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(D, null, 2));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute('href', dataStr);
+  dlAnchor.setAttribute('download', `งบประมาณ_2570_ข้อมูลสำรอง_${new Date().toISOString().slice(0,10)}.json`);
+  dlAnchor.click();
+  showToast('ส่งออกไฟล์ข้อมูลเรียบร้อย');
+}
+
+function importData(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (parsed && parsed.base && parsed.scn) {
+        D = parsed;
+        SC = Object.keys(D.scn);
+        customScenarios = SC.filter(k => !['ไม่ลดเลย', 'ลด .10', 'ลด .20', 'ลด .25'].includes(k));
+        cur = SC[0];
+        recalcAll();
+        saveToStorage();
+        render();
+        showToast('นำเข้าข้อมูลสำเร็จ');
+      } else {
+        showToast('ไฟล์ JSON ไม่ถูกต้องตามรูปแบบ', true);
+      }
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการอ่านไฟล์', true);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Initial Run
+loadStoredData();
+recalcAll();
+render();
+initFirebase();
+window.addEventListener('resize', () => { charts(); updateComparison(); });
+</script>
+</body>
+</html>
